@@ -1,0 +1,194 @@
+{
+    "inv_first_ISI.Step0.4": {
+        "mean feature error": 0.22167175098956318, 
+        "feature error sd": 0.0
+    }, 
+    "inv_first_ISI.Step0.6": {
+        "mean feature error": 0.38439595592258025, 
+        "feature error sd": 0.0
+    }, 
+    "inv_first_ISI.Step0.2": {
+        "mean feature error": 0.55558877994133493, 
+        "feature error sd": 0.0
+    }, 
+    "inv_first_ISI.Step0.8": {
+        "mean feature error": 0.61280331937455534, 
+        "feature error sd": 0.0
+    }, 
+    "AP1_amp.Step1.0": {
+        "mean feature error": 4.0891074171626292, 
+        "feature error sd": 0.0
+    }, 
+    "inv_time_to_first_spike.Step0.8": {
+        "mean feature error": 0.5242833874711571, 
+        "feature error sd": 0.0
+    }, 
+    "inv_fourth_ISI.Step1.0": {
+        "mean feature error": 1.1025366038638622, 
+        "feature error sd": 0.0
+    }, 
+    "inv_time_to_first_spike.Step0.4": {
+        "mean feature error": 0.51358643303385221, 
+        "feature error sd": 0.0
+    }, 
+    "inv_time_to_first_spike.Step1.0": {
+        "mean feature error": 0.64857455220620874, 
+        "feature error sd": 0.0
+    }, 
+    "inv_time_to_first_spike.Step0.6": {
+        "mean feature error": 0.53587500440526314, 
+        "feature error sd": 0.0
+    }, 
+    "inv_time_to_first_spike.Step0.2": {
+        "mean feature error": 0.2115564938706932, 
+        "feature error sd": 0.0
+    }, 
+    "inv_third_ISI.Step0.8": {
+        "mean feature error": 0.6479902772852042, 
+        "feature error sd": 0.0
+    }, 
+    "inv_fifth_ISI.Step0.8": {
+        "mean feature error": 1.356122684403084, 
+        "feature error sd": 0.0
+    }, 
+    "APlast_amp.Step1.0": {
+        "mean feature error": 2.7404265812263393, 
+        "feature error sd": 0.0
+    }, 
+    "inv_third_ISI.Step0.4": {
+        "mean feature error": 0.62764066912305927, 
+        "feature error sd": 0.0
+    }, 
+    "inv_third_ISI.Step1.0": {
+        "mean feature error": 0.48722978317402194, 
+        "feature error sd": 0.0
+    }, 
+    "inv_fifth_ISI.Step0.6": {
+        "mean feature error": 1.2283167038389455, 
+        "feature error sd": 0.0
+    }, 
+    "AHP_depth.Step1.0": {
+        "mean feature error": 1.5378528536080078, 
+        "feature error sd": 0.47528674167884172
+    }, 
+    "inv_fifth_ISI.Step0.2": {
+        "mean feature error": 0.18367570860401486, 
+        "feature error sd": 0.0
+    }, 
+    "time_to_last_spike.Step0.6": {
+        "mean feature error": 0.89018710745136709, 
+        "feature error sd": 0.0
+    }, 
+    "time_to_last_spike.Step0.4": {
+        "mean feature error": 1.2433610609316801, 
+        "feature error sd": 0.0
+    }, 
+    "voltage_deflection_begin.Step-2.0": {
+        "mean feature error": 3.9662161423753828, 
+        "feature error sd": 0.0
+    }, 
+    "time_to_last_spike.Step0.2": {
+        "mean feature error": 0.40550645773884852, 
+        "feature error sd": 0.0
+    }, 
+    "time_to_last_spike.Step0.8": {
+        "mean feature error": 1.0462199000742889, 
+        "feature error sd": 0.0
+    }, 
+    "inv_second_ISI.Step0.8": {
+        "mean feature error": 0.14183385135418117, 
+        "feature error sd": 0.0
+    }, 
+    "inv_fifth_ISI.Step0.4": {
+        "mean feature error": 1.2312759512215961, 
+        "feature error sd": 0.0
+    }, 
+    "inv_third_ISI.Step0.6": {
+        "mean feature error": 0.64417843708933487, 
+        "feature error sd": 0.0
+    }, 
+    "inv_fifth_ISI.Step1.0": {
+        "mean feature error": 1.2483598685947359, 
+        "feature error sd": 0.0
+    }, 
+    "inv_first_ISI.Step1.0": {
+        "mean feature error": 0.90302210909543412, 
+        "feature error sd": 0.0
+    }, 
+    "inv_second_ISI.Step0.2": {
+        "mean feature error": 0.48416733615498303, 
+        "feature error sd": 0.0
+    }, 
+    "inv_second_ISI.Step0.4": {
+        "mean feature error": 0.22280067126329689, 
+        "feature error sd": 0.0
+    }, 
+    "inv_second_ISI.Step1.0": {
+        "mean feature error": 0.32719561005875153, 
+        "feature error sd": 0.0
+    }, 
+    "inv_second_ISI.Step0.6": {
+        "mean feature error": 0.035157094117896671, 
+        "feature error sd": 0.0
+    }, 
+    "inv_fourth_ISI.Step0.4": {
+        "mean feature error": 0.91990170210509614, 
+        "feature error sd": 0.0
+    }, 
+    "inv_fourth_ISI.Step0.6": {
+        "mean feature error": 1.016530487705287, 
+        "feature error sd": 0.0
+    }, 
+    "voltage_deflection_begin.Step-1.0": {
+        "mean feature error": 3.9824160937008299, 
+        "feature error sd": 0.0
+    }, 
+    "inv_fourth_ISI.Step0.2": {
+        "mean feature error": 0.25993643252557713, 
+        "feature error sd": 0.0
+    }, 
+    "inv_last_ISI.Step1.0": {
+        "mean feature error": 2.7063209469526393, 
+        "feature error sd": 0.0
+    }, 
+    "inv_fourth_ISI.Step0.8": {
+        "mean feature error": 1.1942235801939589, 
+        "feature error sd": 0.0
+    }, 
+    "inv_last_ISI.Step0.6": {
+        "mean feature error": 2.0426690719709928, 
+        "feature error sd": 0.0
+    }, 
+    "inv_last_ISI.Step0.4": {
+        "mean feature error": 0.93614852287821848, 
+        "feature error sd": 0.0
+    }, 
+    "voltage_deflection.Step-2.0": {
+        "mean feature error": 4.1770971848391811, 
+        "feature error sd": 0.0
+    }, 
+    "inv_third_ISI.Step0.2": {
+        "mean feature error": 0.40545752221071873, 
+        "feature error sd": 0.0
+    }, 
+    "AP_duration_half_width.Step1.0": {
+        "mean feature error": 3.496186831448461, 
+        "feature error sd": 2.6391630993086164
+    }, 
+    "time_to_last_spike.Step1.0": {
+        "mean feature error": 1.4975625398519037, 
+        "feature error sd": 0.0
+    }, 
+    "voltage_deflection.Step-1.0": {
+        "mean feature error": 4.4969775004841495, 
+        "feature error sd": 0.0
+    }, 
+    "inv_last_ISI.Step0.2": {
+        "mean feature error": 0.33170577577273941, 
+        "feature error sd": 0.0
+    }, 
+    "inv_last_ISI.Step0.8": {
+        "mean feature error": 3.3428159733650742, 
+        "feature error sd": 0.0
+    }
+}

@@ -4,7 +4,7 @@ import sciunit
 from sciunit import Test,Score,ObservationError
 from neuronunit.capabilities import ProducesMembranePotential
 from neuronunit.capabilities import ReceivesCurrent
-from sciunit.comparators import zscore, dimensionless# Converters.
+from sciunit.comparators import ZScore, assert_dimensionless# Converters.
 from sciunit.scores import ErrorScore,BooleanScore,ZScore # Scores.
 
 try:
@@ -52,9 +52,9 @@ def zscore2(observation, prediction):
 
     try:
         result_Ith = (p_value_Ith - o_mean_Ith)/o_std_Ith
-        result_Ith = dimensionless(result_Ith)
+        result_Ith = assert_dimensionless(result_Ith)
         result_Veq = (p_value_Veq - o_mean_Veq)/o_std_Veq
-        result_Veq = dimensionless(result_Veq)
+        result_Veq = assert_dimensionless(result_Veq)
 
     except (TypeError,AssertionError) as e:
         result_Ith = e
@@ -121,7 +121,7 @@ def ttest_calc(observation, prediction):
 
 	    try:
 	        ttest_result = ttest(exp_means[i], model_means[i], exp_SDs[i], model_SDs[i], exp_Ns[i], model_N)
-	        ttest_result = dimensionless(ttest_result)
+	        ttest_result = assert_dimensionless(ttest_result)
 	        p_values.append(ttest_result)
 
 	    except (TypeError,AssertionError) as e:
@@ -157,26 +157,24 @@ def zscore3(observation, prediction):
     feature_results_dict={}
 
     for i in range (0, len(features_names)):
-        if "Apic" not in features_names[i]:
+        p_value = prediction[features_names[i]]['feature values']
+        o_mean = float(observation[features_names[i]]['Mean'])
+        o_std = float(observation[features_names[i]]['Std'])
 
-            p_value = prediction[features_names[i]]['feature values']
-            o_mean = float(observation[features_names[i]]['Mean'])
-            o_std = float(observation[features_names[i]]['Std'])
-
-            p_std = prediction[features_names[i]]['feature sd']
+        p_std = prediction[features_names[i]]['feature sd']
 
 
-            try:
-                feature_error = abs(p_value - o_mean)/o_std
-                feature_error = dimensionless(feature_error)
-                feature_error_mean=numpy.mean(feature_error)
-                feature_error_sd=numpy.std(feature_error)
+        try:
+            feature_error = abs(p_value - o_mean)/o_std
+            feature_error = assert_dimensionless(feature_error)
+            feature_error_mean=numpy.mean(feature_error)
+            feature_error_sd=numpy.std(feature_error)
 
-            except (TypeError,AssertionError) as e:
-                feature_error = e
-            feature_error_means=numpy.append(feature_error_means,feature_error_mean)
-            feature_result={features_names[i]:{'mean feature error':feature_error_mean,
-                                            'feature error sd':feature_error_sd}}
+        except (TypeError,AssertionError) as e:
+            feature_error = e
+        feature_error_means=numpy.append(feature_error_means,feature_error_mean)
+        feature_result={features_names[i]:{'mean feature error':feature_error_mean,
+                                        'feature error sd':feature_error_sd}}
 
         feature_results_dict.update(feature_result)
 
@@ -238,7 +236,9 @@ class DepolarizationBlockTest(Test):
 
 		self.force_run = force_run
 		self.directory='./temp_data/'
+		self.directory_results='./results/'
 		self.directory_figs='./figs/'
+
 
 		description = "Tests if the model enters depolarization block under current injection of increasing amplitudes."
 
@@ -247,7 +247,7 @@ class DepolarizationBlockTest(Test):
 
 	def cclamp(self, model, amp):
 
-		path = self.directory + model.name + '/'
+		path = self.directory + model.name + '/depol_block/'
 
 		if not os.path.exists(path):
 			os.makedirs(path)
@@ -302,9 +302,10 @@ class DepolarizationBlockTest(Test):
 
 		max=numpy.amax(spikecount_array)
 
-		Ith_index = numpy.where(spikecount_array==max)[0]
 
-		if Ith_index== spikecount_array.size-1:     # If the max num AP is the last element, it didn`t enter depol. block
+		Ith_index = numpy.where(spikecount_array==max)[0]		# this is an array if there are a lot of same values in spike_count_array
+
+		if Ith_index.size > 1 or Ith_index == (spikecount_array.size) -1:     # If the max num AP is the last element, it didn`t enter depol. block
 		    Ith=float('NaN')                                 # If Ith == None, it means it didn`t enter depol block!!!
 		    Veq=float('NaN')
 		    Veq_index=Ith_index
@@ -314,15 +315,17 @@ class DepolarizationBlockTest(Test):
 		    print " the model did not enter depolarization block"
 		    plt.savefig(path_figs + 'somatic_resp_at_depol_block' + '.pdf', dpi=300)
 
+
 		else:
 		    Ith=amps[Ith_index]
 		    Ith=Ith[0]
 		    Veq_index=Ith_index+1
 		    plt.figure(1)
 		    plt.plot(results[Veq_index][0]['T'],results[Veq_index][0]['V'])
-		    plt.title("somatic response at Ith + 0.05 nA")
-		    plt.xlabel("time (ms)")
-		    plt.ylabel("Somatic voltage (mV)")
+		    plt.title("somatic response at Ith + 0.05 nA", fontsize=20)
+		    plt.xlabel("time (ms)", fontsize=20)
+		    plt.ylabel("Somatic voltage (mV)", fontsize=20)
+		    plt.tick_params(labelsize=18)
 		    plt.savefig(path_figs + 'somatic_resp_at_depol_block' + '.pdf', dpi=300)
 
 		    Veq_trace=results[Veq_index][0]['V']
@@ -335,20 +338,33 @@ class DepolarizationBlockTest(Test):
 
 		    Veq=numpy.average(trace_end)
 
-		print "Ith (the current intensity for which the model exhibited the maximum number of APs):", Ith
-		print "Veq (the equilibrium value during the depolarization block):", Veq
+
+		print "Ith (the current intensity for which the model exhibited the maximum number of APs):", Ith *nA
+		print "Veq (the equilibrium value during the depolarization block):", Veq * mV
+
 
 		plt.figure(2)
-		plt.plot(amps,spikecount_array,'.-')
-		plt.xlabel("I (nA)")
-		plt.ylabel("number of APs")
+		fig = plt.gcf()
+		fig.set_size_inches(14, 12)
+		plt.plot(amps,spikecount_array,'o-', markersize=10)
+		plt.tick_params(labelsize=28)
+		plt.xlabel("I (nA)",fontsize=28)
+		#plt.ylabel("number of APs")
+		plt.ylabel("num. of APs",fontsize=28)
+		plt.margins(0.01)
 		plt.savefig(path_figs + 'number_of_APs' + '.pdf', dpi=600)
+		#plt.savefig(path_figs + 'num. of Aps' + '.pdf')
+
+		if Ith_index.size > 1:
+			Ith_index = int(Ith_index[-1])
+			Veq_index = int(Veq_index[-1])
 
 		plt.figure(3)
 		plt.plot(results[Ith_index][0]['T'],results[Ith_index][0]['V'])
-		plt.title("somatic response at Ith")
-		plt.xlabel("time (ms)")
-		plt.ylabel("Somatic voltage (mV)")
+		plt.title("somatic response at Ith", fontsize=20)
+		plt.xlabel("time (ms)", fontsize=20)
+		plt.ylabel("Somatic voltage (mV)", fontsize=20)
+		plt.tick_params(labelsize=18)
 		plt.savefig(path_figs + 'somatic_resp_at_Ith' + '.pdf', dpi=600)
 
 		x =numpy.array([1, 2])
@@ -386,15 +402,17 @@ class DepolarizationBlockTest(Test):
 		plt.savefig(path_figs + 'Veq' + '.pdf', dpi=600)
 
     	#errors
-
 		if not math.isnan(Veq):
 			Veq_error=abs(Veq*mV-self.observation['mean_Veq'])/self.observation['Veq_std']
 			print "The error of Veq in units of the experimental SD: ", Veq_error
-
+		else:
+			Veq_error=float('NaN')
 
 		if not math.isnan(Ith):
 			Ith_error=abs(Ith*nA-self.observation['mean_Ith'])/self.observation['Ith_std']
 			print "The error of Ith in units of the experimental SD: ", Ith_error
+		else:
+			Ith_error=float('NaN')
 
 
 		num_AP_min=13
@@ -402,8 +420,8 @@ class DepolarizationBlockTest(Test):
 		labels2 = [model.name]
 
 		plt.figure(7)
-		plt.axhline(y=num_AP_min, label='Min. num.of AP\n observed\n experimentally')
-		plt.axhline(y=num_AP_max, label='Max. num.of AP\n observed\n experimentally')
+		plt.axhline(y=num_AP_min, label='Min. num.of AP\n observed\n experimentally', color='green')
+		plt.axhline(y=num_AP_max, label='Max. num.of AP\n observed\n experimentally', color='red')
 		plt.legend()
 
 		plt.plot([1], spikecount_array[Ith_index], 'o')
@@ -412,6 +430,42 @@ class DepolarizationBlockTest(Test):
 		plt.margins(0.2)
 		plt.ylabel("Number of AP at Ith")
 		plt.savefig(path_figs + 'num_of_APs_at_Ith' + '.pdf', dpi=600)
+
+		path_dir = self.directory_results + model.name + '/'
+
+		if not os.path.exists(path_dir):
+			os.makedirs(path_dir)
+
+		file_name_f = path_dir + 'depol_block_features_traces.p'
+		file_name_json = path_dir + 'depol_block_model_features.json'
+		file_name_json_err = path_dir + 'depol_block_model_errors.json'
+
+		errors={}
+		errors['Ith_error']=float(Ith_error)
+		errors['Veq_error']=float(Veq_error)
+
+		json.dump(errors, open(file_name_json_err, "wb"), indent=4)
+
+		features_json={}
+		features_json['Ith']=str(float(Ith) * nA)
+		features_json['Veq']=str(float(Veq) * mV)
+		json.dump(features_json, open(file_name_json, "wb"), indent=4)
+
+		features={}
+		features['Ith']=[Ith]
+		features['Veq']=[Veq]
+		features['Ith_error']=[float(Ith_error)]
+		features['Veq_error']=[float(Veq_error)]
+		features['Spikecount']=spikecount_array
+		features['Ith_trace']=results[Ith_index][0]['V']  # trace where Ith is measured (max num of APs)
+		features['Ith_time']=results[Ith_index][0]['T']
+		features['Veq_trace']=results[Veq_index][0]['V']  # trace where Veq is measured
+		features['Veq_time']=results[Veq_index][0]['T']
+
+		pickle.dump(features, gzip.GzipFile(file_name_f, "wb"))
+
+		print "Results are saved in the directory: ", path_dir
+
 
 		return Ith, Veq
 
@@ -431,13 +485,16 @@ class DepolarizationBlockTest(Test):
 
 		npool = 4
 		pool = multiprocessing.Pool(npool)
+		#amps = numpy.arange(0,3.55,0.05)
 		amps = numpy.arange(0,1.65,0.05)
 
 		cclamp_ = functools.partial(self.cclamp, model)
 		result = pool.map_async(cclamp_, amps)
 		results = result.get()
 
+
 		Ith, Veq = self.find_Ith_Veq(model, results, amps)
+
 		prediction = {'model_Ith':float(Ith)*nA,'model_Veq': float(Veq)*mV}
 
 		return prediction
@@ -477,6 +534,7 @@ class ObliqueIntegrationTest(Test):
 		self.force_run_synapse = force_run_synapse
 		self.force_run_bin_search = force_run_bin_search
 		self.directory='./temp_data/'
+		self.directory_results='./results/'
 		self.directory_figs='./figs/'
 
 		description = "Tests the signal integration in oblique dendrites for increasing number of synchronous and asynchronous inputs"
@@ -678,38 +736,40 @@ class ObliqueIntegrationTest(Test):
 
 	    fig0, axes0 = plt.subplots(nrows=2, ncols=1)
 	    fig0.tight_layout()
-	    fig0.suptitle('Synchronous inputs (red: dendritic trace, black: somatic trace)')
+	    fig0.suptitle('Synchronous inputs (red: dendritic trace, black: somatic trace)', fontsize=22)
 	    for i in range (0,len(dend_loc000)):
 	        plt.subplot(5,2,i+1)
 	        plt.subplots_adjust(hspace = 0.5)
 	        for j, number in enumerate(num):
 	            plt.plot(sep_results[i][j][0][0]['T'],sep_results[i][j][0][0]['V'], 'k')       # somatic traces
 	            plt.plot(sep_results[i][j][1][0]['T'],sep_results[i][j][1][0]['V'], 'r')        # dendritic traces
-	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]))
+	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]), fontsize=22)
 
-	        plt.xlabel("time (ms)")
-	        plt.ylabel("Voltage (mV)")
+	        plt.xlabel("time (ms)", fontsize=22)
+	        plt.ylabel("Voltage (mV)", fontsize=22)
 	        plt.xlim(140, 250)
+	        plt.tick_params(labelsize=20)
 
 	    fig0 = plt.gcf()
-	    fig0.set_size_inches(12, 18)
+	    fig0.set_size_inches(16, 24)
 	    plt.savefig(path_figs + 'traces_sync' + '.pdf', dpi=600,)
 
 	    fig0, axes0 = plt.subplots(nrows=2, ncols=1)
 	    fig0.tight_layout()
-	    fig0.suptitle('Synchronous inputs')
+	    fig0.suptitle('Synchronous inputs',fontsize=22)
 	    for i in range (0,len(dend_loc000)):
 	        plt.subplot(5,2,i+1)
 	        plt.subplots_adjust(hspace = 0.5)
 	        for j, number in enumerate(num):
 	            plt.plot(sep_results[i][j][0][0]['T'],sep_results[i][j][0][0]['V'], 'k')       # somatic traces
-	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]))
+	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]),fontsize=22)
 
-	        plt.xlabel("time (ms)")
-	        plt.ylabel("Somatic voltage (mV)")
+	        plt.xlabel("time (ms)",fontsize=22)
+	        plt.ylabel("Somatic voltage (mV)",fontsize=22)
 	        plt.xlim(140, 250)
+	        plt.tick_params(labelsize=20)
 	    fig0 = plt.gcf()
-	    fig0.set_size_inches(12, 18)
+	    fig0.set_size_inches(16, 24)
 	    plt.savefig(path_figs + 'somatic_traces_sync' + '.pdf', dpi=600,)
 
 	    soma_depol=numpy.array([])
@@ -962,7 +1022,7 @@ class ObliqueIntegrationTest(Test):
 	    plt.plot(expected_mean_depol_input,expected_mean_depol_input, 'k--')         # this gives the linear line
 	    plt.margins(0.1)
 	    plt.legend(loc=2)
-	    plt.title("Summary plot of mean input-output curve for every locations")
+	    plt.title("Summary plot of mean input-output curve for all locations")
 	    plt.xlabel("expected EPSP (mV)")
 	    plt.ylabel("measured EPSP (mV)")
 
@@ -1286,56 +1346,91 @@ class ObliqueIntegrationTest(Test):
 	    plt.savefig(path_figs + 'errors_sync' + '.pdf', dpi=600,)
 
 	# mean values plot
-	    fig3, axes3 = plt.subplots(nrows=2, ncols=1)
+
+	    import matplotlib.gridspec as gridspec
+	    gs = gridspec.GridSpec(1, 4,width_ratios=[4,1,2,1])
+	    fig3, axes3 = plt.subplots(nrows=1, ncols=4)
 	    fig3.tight_layout()
 	    fig3.suptitle('Synchronous inputs', fontsize=15)
-	    plt.subplot(2,2,1)
+	    #plt.subplot(1,4,1)
+	    plt.subplot(gs[0])
 
 	    e_values = numpy.array([threshold_SD, sd_sep_threshold, threshold_prox_SD, sd_prox_thresholds, threshold_dist_SD, sd_dist_thresholds, amp_SD, sd_amp_at_threshold])
 	    x_values =numpy.array([1,2,4,5,7,8,10,11])
 	    y_values = numpy.array([experimental_mean_threshold, mean_sep_threshold, threshold_prox, mean_prox_thresholds, threshold_dist, mean_dist_thresholds, exp_mean_amp, mean_amp_at_threshold])
-	    labels_values=['experimental mean threshold', 'model mean threshold', 'exp. mean proximal threshold', 'model mean proximal threshold', 'exp. mean distal threshold', 'model mean distal threshold','exp. mean amplitude at th.', 'model mean amplitude at th.']
-	    plt.errorbar(x_values, y_values, e_values, linestyle='None', marker='o')
-	    plt.xticks(x_values, labels_values, rotation=20)
+	    labels_values=['','threshold', '', 'proximal threshold', '', 'distal threshold','', 'amplitude at th.']
+	    colors = ['r', 'b', 'r', 'b', 'r', 'b', 'r', 'b']
+	    for i in range(len(y_values)):
+	    	if i==0:
+	    		plt.errorbar(x_values[i], y_values[i], e_values[i], linestyle='None', marker='o', color=colors[i], label='experimental mean + SD')
+	    	elif i == 1:
+				plt.errorbar(x_values[i], y_values[i], e_values[i], linestyle='None', marker='o', color=colors[i], label='model mean + SD')
+	    	else:
+				plt.errorbar(x_values[i], y_values[i], e_values[i], linestyle='None', marker='o', color=colors[i])
+		plt.xticks(x_values, labels_values, rotation=20)
 	    plt.tick_params(labelsize=15)
 	    plt.margins(0.1)
-	    plt.ylabel("experimental and model mean values with SD (mV)", fontsize=15)
+	    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0, prop={'size':12})
+	    plt.ylabel("Voltage (mV)", fontsize=15)
 
-	    plt.subplot(2,2,2)
+	    #plt.subplot(1,4,2)
+	    plt.subplot(gs[1])
 
 	    e_values = numpy.array([deriv_SD, sd_peak_dV_dt_at_threshold])
 	    x_values =numpy.array([1,2])
 	    y_values = numpy.array([exp_mean_peak_deriv, mean_peak_dV_dt_at_threshold])
-	    labels_values=['exp. mean peak dV/dt at th.', 'model mean peak dV/dt at th.']
-	    plt.errorbar(x_values, y_values, e_values, linestyle='None', marker='o')
-	    plt.xticks(x_values, labels_values, rotation=20)
+	    labels_values=['', 'peak dV/dt at th.']
+	    colors=['r', 'b']
+	    for i in range(len(y_values)):
+	    	if i==0:
+	    		plt.errorbar(x_values[i], y_values[i], e_values[i], linestyle='None', marker='o', color=colors[i], label='experimental mean')
+	    	elif i == 1:
+	    		plt.errorbar(x_values[i], y_values[i], e_values[i], linestyle='None', marker='o', color=colors[i], label='model mean')
+		plt.xticks(x_values, labels_values, rotation=10)
 	    plt.tick_params(labelsize=15)
-	    plt.margins(0.1)
-	    plt.ylabel("experimental and model mean max dV/dt with SD (V/s)", fontsize=15)
+	    plt.margins(0.3)
+	    #plt.legend(loc=1, prop={'size':10})
+	    plt.ylabel("peak dV/dt(V/s)", fontsize=15)
 
-	    plt.subplot(2,2,3)
+	    #plt.subplot(1,4,3)
+	    plt.subplot(gs[2])
 
 	    e_values = numpy.array([nonlin_SD, sd_nonlin, suprath_nonlin_SD, suprath_sd_nonlin])
 	    x_values =numpy.array([1,2,4,5])
 	    y_values = numpy.array([exp_mean_nonlin, mean_nonlin, suprath_exp_mean_nonlin, suprath_mean_nonlin])
-	    labels_values=['exp mean degree of nonlinearity at th.', 'model mean degree of nonlinearity at th.', 'exp mean suprath. degree of nonlinearity', 'model mean suprath. degree of nonlinearity']
-	    plt.errorbar(x_values, y_values, e_values, linestyle='None', marker='o')
+	    labels_values=['', 'degree of nonlinearity at th.', '', 'suprath. degree of nonlinearity']
+	    colors=['r', 'b', 'r', 'b']
+	    for i in range(len(y_values)):
+	    	if i==0:
+	    		plt.errorbar(x_values[i], y_values[i], e_values[i], linestyle='None', marker='o', color=colors[i], label='experimental mean')
+	    	elif i == 1:
+	    		plt.errorbar(x_values[i], y_values[i], e_values[i], linestyle='None', marker='o', color=colors[i], label='model mean')
+	    	else:
+				plt.errorbar(x_values[i], y_values[i], e_values[i], linestyle='None', marker='o', color=colors[i])
 	    plt.xticks(x_values, labels_values, rotation=10)
 	    plt.tick_params(labelsize=15)
 	    plt.margins(0.1)
-	    plt.ylabel("experimental and model mean degree of nonlinearity with SD (%)", fontsize=15)
+	    #plt.legend(loc=2, prop={'size':10})
+	    plt.ylabel("degree of nonlinearity(%)", fontsize=15)
 
-	    plt.subplot(2,2,4)
+	    #plt.subplot(1,4,4)
+	    plt.subplot(gs[3])
 
 	    e_values = numpy.array([exp_mean_time_to_peak_SD, sd_time_to_peak_at_threshold])
 	    x_values =numpy.array([1,2])
 	    y_values = numpy.array([exp_mean_time_to_peak, mean_time_to_peak_at_threshold])
-	    labels_values=['exp. mean time to peak at th.', 'model mean time to peak at th.']
-	    plt.errorbar(x_values, y_values, e_values, linestyle='None', marker='o')
+	    labels_values=['', 'time to peak at th.']
+	    colors=['r', 'b']
+	    for i in range(len(y_values)):
+	    	if i==0:
+	    		plt.errorbar(x_values[i], y_values[i], e_values[i], linestyle='None', marker='o', color=colors[i], label='experimental mean')
+	    	elif i == 1:
+	    		plt.errorbar(x_values[i], y_values[i], e_values[i], linestyle='None', marker='o', color=colors[i], label='model mean')
 	    plt.xticks(x_values, labels_values, rotation=10)
 	    plt.tick_params(labelsize=15)
-	    plt.margins(0.1)
-	    plt.ylabel("experimental and model mean time to peak with SD (ms)", fontsize=15)
+	    plt.margins(0.3)
+	    #plt.legend(loc=1, prop={'size':10})
+	    plt.ylabel("time to peak (ms)", fontsize=15)
 
 	    fig = plt.gcf()
 	    fig.set_size_inches(22, 18)
@@ -1404,37 +1499,39 @@ class ObliqueIntegrationTest(Test):
 
 	    fig0, axes0 = plt.subplots(nrows=2, ncols=1)
 	    fig0.tight_layout()
-	    fig0.suptitle('Asynchronous inputs (red: dendritic trace, black: somatic trace)')
+	    fig0.suptitle('Asynchronous inputs (red: dendritic trace, black: somatic trace)',fontsize=22)
 	    for i in range (0,len(dend_loc000)):
 	        plt.subplot(5,2,i+1)
 	        plt.subplots_adjust(hspace = 0.5)
 	        for j, number in enumerate(num):
 	            plt.plot(sep_results[i][j][0][0]['T'],sep_results[i][j][0][0]['V'], 'k')       # somatic traces
 	            plt.plot(sep_results[i][j][1][0]['T'],sep_results[i][j][1][0]['V'], 'r')        # dendritic traces
-	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]))
+	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]),fontsize=22)
 
-	        plt.xlabel("time (ms)")
-	        plt.ylabel("Voltage (mV)")
+	        plt.xlabel("time (ms)",fontsize=22)
+	        plt.ylabel("Voltage (mV)",fontsize=22)
 	        plt.xlim(140, 250)
+	        plt.tick_params(labelsize=20)
 	    fig = plt.gcf()
-	    fig.set_size_inches(12, 18)
+	    fig.set_size_inches(16, 24)
 	    plt.savefig(path_figs + 'traces_async' + '.pdf', dpi=600,)
 
 	    fig0, axes0 = plt.subplots(nrows=2, ncols=1)
 	    fig0.tight_layout()
-	    fig0.suptitle('Asynchronous inputs')
+	    fig0.suptitle('Asynchronous inputs',fontsize=22)
 	    for i in range (0,len(dend_loc000)):
 	        plt.subplot(5,2,i+1)
 	        plt.subplots_adjust(hspace = 0.5)
 	        for j, number in enumerate(num):
 	            plt.plot(sep_results[i][j][0][0]['T'],sep_results[i][j][0][0]['V'], 'k')       # somatic traces
-	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]))
+	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]),fontsize=22)
 
-	        plt.xlabel("time (ms)")
-	        plt.ylabel("Somatic voltage (mV)")
+	        plt.xlabel("time (ms)",fontsize=22)
+	        plt.ylabel("Somatic voltage (mV)",fontsize=22)
 	        plt.xlim(140, 250)
+	        plt.tick_params(labelsize=20)
 	    fig = plt.gcf()
-	    fig.set_size_inches(12, 18)
+	    fig.set_size_inches(16, 24)
 	    plt.savefig(path_figs + 'somatic_traces_async' + '.pdf', dpi=600,)
 
 	    soma_depol=numpy.array([])
@@ -1753,10 +1850,41 @@ class ObliqueIntegrationTest(Test):
 		                'model_mean_time_to_peak':model_means[7], 'model_time_to_peak_std': model_SDs[7],
 		                'model_mean_async_nonlin':mean_nonlin_at_th_asynch, 'model_async_nonlin_std': SD_nonlin_at_th_asynch,
 		                'model_n': model_N }
+		prediction_json = {'model_mean_threshold':str(model_means[0]), 'model_threshold_std': str(model_SDs[0]),
+		                'model_mean_prox_threshold':str(model_means[1]), 'model_prox_threshold_std': str(model_SDs[1]),
+		                'model_mean_dist_threshold':str(model_means[2]), 'model_dist_threshold_std': str(model_SDs[2]),
+						'model_mean_peak_deriv':str(model_means[3]),'model_peak_deriv_std': str(model_SDs[3]),
+		                'model_mean_nonlin_at_th':str(model_means[4]), 'model_nonlin_at_th_std': str(model_SDs[4]),
+		                'model_mean_nonlin_suprath':str(model_means[5]), 'model_nonlin_suprath_std': str(model_SDs[5]),
+		                'model_mean_amp_at_th':str(model_means[6]),'model_amp_at_th_std': str(model_SDs[6]),
+		                'model_mean_time_to_peak':str(model_means[7]), 'model_time_to_peak_std': str(model_SDs[7]),
+		                'model_mean_async_nonlin':str(mean_nonlin_at_th_asynch), 'model_async_nonlin_std': str(SD_nonlin_at_th_asynch),
+		                'model_n': model_N }
+
+		path_results = self.directory_results + model_name + '/'
+		if not os.path.exists(path_results):
+			os.makedirs(path_results)
+		file_name_json = path_results + 'oblique_model_features.json'
+
+		json.dump(prediction_json, open(file_name_json, "wb"), indent=4)
+
+		print "Results are saved in the directory: ", path_results
+
 		return prediction
 
 	def compute_score(self, observation, prediction):
 		"""Implementation of sciunit.Test.score_prediction."""
+
+		path_results = self.directory_results + model_name + '/'
+		if not os.path.exists(path_results):
+			os.makedirs(path_results)
+		file_name = path_results + 'oblique_features.p'
+
+		results=[]
+		results.append(observation)
+		results.append(prediction)
+		pickle.dump(results, gzip.GzipFile(file_name, "wb"))
+
 		score0 = ttest_calc(observation,prediction)
 
 		score=P_Value(score0)
@@ -1800,6 +1928,7 @@ class SomaticFeaturesTest(Test):
 		self.force_run = force_run
 		self.directory='./temp_data/'
 		self.directory_figs='./figs/'
+		self.directory_results='./results/'
 
 		with open('./stimfeat/PC_newfeat_No14112401_15012303-m990803_stimfeat.json') as f:
 		    self.config = json.load(f, object_pairs_hook=collections.OrderedDict)
@@ -1818,18 +1947,17 @@ class SomaticFeaturesTest(Test):
 	    stimuli_names=self.config['stimuli'].keys()
 
 	    for i in range (0, len(stimuli_names)):
-	        if "Apic" not in stimuli_names[i]:
-	            stimulus_list.append(stimuli_names[i])
-	            stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['Amplitude'])
-	            stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['Delay'])
-	            stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['Duration'])
-	            stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['StimSectionName'])
-	            stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['StimLocationX'])
-	            stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['Type'])
-	            stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['RecSectionName'])
-	            stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['RecLocationX'])
-	            stimuli_list.append(stimulus_list)
-	            stimulus_list=[]
+			stimulus_list.append(stimuli_names[i])
+			stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['Amplitude'])
+			stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['Delay'])
+			stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['Duration'])
+			stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['StimSectionName'])
+			stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['StimLocationX'])
+			stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['Type'])
+			stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['RecSectionName'])
+			stimulus_list.append(self.config['stimuli'][stimuli_names[i]]['RecLocationX'])
+			stimuli_list.append(stimulus_list)
+			stimulus_list=[]
 
 	    return stimuli_list
 
@@ -1841,14 +1969,13 @@ class SomaticFeaturesTest(Test):
 
 
 	    for i in range (0, len(features_names)):
-	        if "Apic" not in features_names[i]:
-	            feature_list.append(features_names[i])
-	            feature_list.append(observation[features_names[i]]['Std'])
-	            feature_list.append(observation[features_names[i]]['Mean'])
-	            feature_list.append(observation[features_names[i]]['Stimulus'])
-	            feature_list.append(observation[features_names[i]]['Type'])
-	            features_list.append(feature_list)
-	            feature_list=[]
+			feature_list.append(features_names[i])
+			feature_list.append(observation[features_names[i]]['Std'])
+			feature_list.append(observation[features_names[i]]['Mean'])
+			feature_list.append(observation[features_names[i]]['Stimulus'])
+			feature_list.append(observation[features_names[i]]['Type'])
+			features_list.append(feature_list)
+			feature_list=[]
 
 	    return features_names, features_list
 
@@ -1946,17 +2073,24 @@ class SomaticFeaturesTest(Test):
 	    plt.legend(loc=2)
 	    plt.savefig(path_figs + 'traces' + '.pdf', dpi=600,)
 
+
 	    fig, axes = plt.subplots(nrows=4, ncols=2)
 	    fig.tight_layout()
 	    for i in range (0, len(traces_results)):
 
 	        for key, value in traces_results[i].iteritems():
 
+
 	            plt.subplot(4,2,i+1)
 	            plt.plot(traces_results[i][key][0], traces_results[i][key][1])
-	            plt.title(key)
-	            plt.xlabel("ms")
-	            plt.ylabel("mV")
+	            plt.title(key, fontsize=15)
+	            plt.xlabel("ms", fontsize=15)
+	            plt.ylabel("mV", fontsize=15)
+	            plt.xlim(800,1600)
+	            plt.tick_params(labelsize=15)
+
+
+
 	    fig = plt.gcf()
 	    fig.set_size_inches(12, 10)
 	    plt.savefig(path_figs + 'traces_subplots' + '.pdf', dpi=600,)
@@ -1965,11 +2099,10 @@ class SomaticFeaturesTest(Test):
 	                            height_ratios=[0.9,0.1], top=0.97, bottom=0.05, left=0.25, right=0.97, hspace=0.1, wspace=0.2)
 
 	    for i in range (len(features_names)):
-	        if "Apic" not in features_names[i]:
-	            feature_name=features_names[i]
-	            y=i
-	            axs[0].errorbar(feature_results_dict[feature_name]['feature mean'], y, xerr=feature_results_dict[feature_name]['feature sd'], marker='o', color='blue', clip_on=False)
-	            axs[0].errorbar(float(observation[feature_name]['Mean']), y, xerr=float(observation[feature_name]['Std']), marker='o', color='red', clip_on=False)
+			feature_name=features_names[i]
+			y=i
+			axs[0].errorbar(feature_results_dict[feature_name]['feature mean'], y, xerr=feature_results_dict[feature_name]['feature sd'], marker='o', color='blue', clip_on=False)
+			axs[0].errorbar(float(observation[feature_name]['Mean']), y, xerr=float(observation[feature_name]['Std']), marker='o', color='red', clip_on=False)
 	    axs[0].yaxis.set_ticks(range(len(features_names)))
 	    axs[0].set_yticklabels(features_names)
 	    axs[0].set_ylim(-1, len(features_names))
@@ -2002,9 +2135,32 @@ class SomaticFeaturesTest(Test):
 		for i in range (0,len(feature_results)):
 		    feature_results_dict.update(feature_results[i])  #concatenate dictionaries
 
+		path = self.directory_results + model_name + '/'
+
+		if not os.path.exists(path):
+		    os.makedirs(path)
+
+		file_name=path+'soma_features.p'
+
+		SomaFeaturesDict={}
+		SomaFeaturesDict['traces_results']=traces_results
+		SomaFeaturesDict['features_names']=features_names
+		SomaFeaturesDict['feature_results_dict']=feature_results_dict
+		SomaFeaturesDict['observation']=self.observation
+		pickle.dump(SomaFeaturesDict, gzip.GzipFile(file_name, "wb"))
+
 		self.create_figs(model, traces_results, features_names, feature_results_dict, self.observation)
 
 		prediction = feature_results_dict
+
+		soma_features={}
+		needed_keys = { 'feature mean', 'feature sd'}
+		for i in range(len(SomaFeaturesDict['features_names'])):
+			feature_name = SomaFeaturesDict['features_names'][i]
+			soma_features[feature_name] = { key:value for key,value in prediction[feature_name].items() if key in needed_keys }
+
+		file_name_json = path + 'somatic_model_features.json'
+		json.dump(soma_features, open(file_name_json, "wb"), indent=4)
 
 		return prediction
 
@@ -2018,18 +2174,35 @@ class SomaticFeaturesTest(Test):
 
 		score_sum, feature_results_dict, features_names  = zscore3(observation,prediction)
 
+		path = self.directory_results + model_name + '/'
+
+		if not os.path.exists(path):
+		    os.makedirs(path)
+
+		file_name=path+'soma_errors.p'
+
+		SomaErrorsDict={}
+		SomaErrorsDict['features_names']=features_names
+		SomaErrorsDict['feature_results_dict']=feature_results_dict
+
+		pickle.dump(SomaErrorsDict, gzip.GzipFile(file_name, "wb"))
+
+		file_name_json = path + 'somatic_model_errors.json'
+		json.dump(SomaErrorsDict['feature_results_dict'], open(file_name_json, "wb"), indent=4)
+
+		print "Results are saved in the directory: ", path
+
 		axs2 = plottools.tiled_figure("features", figs={}, frames=1, columns=1, orientation='page',
 		                              height_ratios=[0.9,0.1], top=0.97, bottom=0.05, left=0.25, right=0.97, hspace=0.1, wspace=0.2)
 
 		for i in range (len(features_names)):
-		    if "Apic" not in features_names[i]:
-		        feature_name=features_names[i]
-		        y=i
-		        axs2[0].errorbar(feature_results_dict[feature_name]['mean feature error'], y, xerr=feature_results_dict[feature_name]['feature error sd'], marker='o', color='blue', clip_on=False)
+			feature_name=features_names[i]
+			y=i
+			axs2[0].errorbar(feature_results_dict[feature_name]['mean feature error'], y, xerr=feature_results_dict[feature_name]['feature error sd'], marker='o', color='blue', clip_on=False)
 		axs2[0].yaxis.set_ticks(range(len(features_names)))
 		axs2[0].set_yticklabels(features_names)
 		axs2[0].set_ylim(-1, len(features_names))
-		axs2[0].set_title('Features')
+		axs2[0].set_title('Feature errors')
 		plt.savefig(path_figs + 'Feature_errors' + '.pdf', dpi=600,)
 
 		score=ZScore3(score_sum)

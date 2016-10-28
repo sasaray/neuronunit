@@ -335,20 +335,6 @@
             "Mean": "20.5677718854",
             "Stimulus": "Step1.0",
             "Type": "inv_last_ISI"
-        },
-        "AP1_amp.StepApic150": {
-            "Std": "8.84061901299",
-            "Weight": "1",
-            "Mean": "61.6405452338",
-            "Stimulus": "StepApic150",
-            "Type": "AP1_amp"
-        },
-        "AP1_amp.StepApic250": {
-            "Std": "6.74288151869",
-            "Weight": "1",
-            "Mean": "57.1478276286",
-            "Stimulus": "StepApic250",
-            "Type": "AP1_amp"
         }
     },
     "stimuli": {
@@ -442,32 +428,6 @@
             "Type": "SquarePulse",
             "StimSectionName": "soma[0]",
             "RecSectionName": "soma[0]"
-        },
-        "StepApic150": {
-            "Delay": "700",
-            "RecLocationX": "0.5",
-            "TTX": "0.0",
-            "StimLocationX": "0.5",
-            "Threshold": "-20.0",
-            "Amplitude": "1.0",
-            "Duration": "300",
-            "HypAmp": "0.0",
-            "Type": "SquarePulse",
-            "StimSectionName": "soma[0]",
-            "RecSectionName": "apic[6]"
-        },
-        "StepApic250": {
-            "Delay": "700",
-            "RecLocationX": "0.166",
-            "TTX": "0.0",
-            "StimLocationX": "0.5",
-            "Threshold": "-20.0",
-            "Amplitude": "1.0",
-            "Duration": "300",
-            "HypAmp": "0.0",
-            "Type": "SquarePulse",
-            "StimSectionName": "soma[0]",
-            "RecSectionName": "apic[10]"
         }
     }
 }

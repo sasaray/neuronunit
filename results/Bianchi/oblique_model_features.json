@@ -1,0 +1,21 @@
+{
+    "model_mean_prox_threshold": "1.01814521998 mV", 
+    "model_mean_async_nonlin": "114.182325385", 
+    "model_n": 10, 
+    "model_mean_time_to_peak": "6.07249999999 ms", 
+    "model_async_nonlin_std": "7.48292283096", 
+    "model_mean_amp_at_th": "4.07711602899 mV", 
+    "model_amp_at_th_std": "3.27370539256 mV", 
+    "model_dist_threshold_std": "0.193960448529 mV", 
+    "model_mean_dist_threshold": "0.45451788588 mV", 
+    "model_mean_nonlin_at_th": "550.782017426", 
+    "model_mean_nonlin_suprath": "453.246672003", 
+    "model_mean_threshold": "0.736331552932 mV", 
+    "model_time_to_peak_std": "1.28818913596 ms", 
+    "model_peak_deriv_std": "3.11765752529 V/s", 
+    "model_threshold_std": "0.485582918264 mV", 
+    "model_nonlin_at_th_std": "317.49577894", 
+    "model_nonlin_suprath_std": "260.685745056", 
+    "model_mean_peak_deriv": "3.27415626574 V/s", 
+    "model_prox_threshold_std": "0.524521686447 mV"
+}
