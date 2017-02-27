@@ -14,13 +14,6 @@
             "Stimulus": "Step1.0",
             "Type": "APlast_amp"
         },
-        "AP_duration_half_width.Step1.0": {
-            "Std": "0.0930749976025",
-            "Weight": "1",
-            "Mean": "0.833876774606",
-            "Stimulus": "Step1.0",
-            "Type": "AP_duration_half_width"
-        },
         "AHP_depth.Step1.0": {
             "Std": "4.91970618493",
             "Weight": "1",

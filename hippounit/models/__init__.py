@@ -5,6 +5,226 @@ from neuronunit.capabilities import ReceivesCurrent,ProducesMembranePotential
 from quantities import ms,mV,Hz
 from neuron import h
 
+class Model(sciunit.Model,
+                 ReceivesCurrent,
+                 ProducesMembranePotential):
+
+    def __init__(self, name="model"):
+        """ Constructor. """
+
+        """ This class should be used with Jupyter notebooks"""
+
+        self.modelpath = None
+        self.libpath = None
+        self.hocpath = None
+        self.template_name = None
+        self.SomaSecList_name = None
+
+        self.name = name
+        self.threshold = -20
+        self.stim = None
+        self.soma = "soma"
+        sciunit.Model.__init__(self, name=name)
+
+        self.c_step_start = 0.00004
+        self.c_step_stop = 0.000004
+        self.c_minmax = numpy.array([0.00004, 0.004])
+        self.dend_loc = [[80,0.27],[80,0.83],[54,0.16],[54,0.95],[52,0.38],[52,0.83],[53,0.17],[53,0.7],[28,0.35],[28,0.78]]
+
+        self.AMPA_tau1 = 0.1
+        self.AMPA_tau2 = 2
+        self.start=150
+
+        self.ns = None
+        self.ampa = None
+        self.nmda = None
+        self.ampa_nc = None
+        self.nmda_nc = None
+
+        self.ndend = None
+        self.xloc = None
+
+    def translate(self, sectiontype, distance=0):
+
+        if "soma" in sectiontype:
+            return self.soma
+        else:
+            return False
+
+    def load_mod_files(self):
+        if os.path.isfile(self.modelpath + self.libpath) is False:
+            os.system("cd " + self.modelpath + "; nrnivmodl")
+
+        h.nrn_load_dll(self.modelpath + self.libpath)
+
+    def initialise(self):
+        # load cell
+        h.load_file(self.hocpath)
+        h.load_file("stdrun.hoc")
+
+        if self.template_name is not None and self.SomaSecList_name is not None:
+            h('objref testcell')
+            h('testcell = new ' + self.template_name)
+            exec('soma = h.' + self.template_name + '.'+ self.SomaSecList_name)
+            for s in soma :
+                self.soma = h.secname()
+        elif self.template_name is not None and self.SomaSecList_name is None:
+            h('objref testcell')
+            h('testcell = new ' + self.template_name)
+            # in this case self.soma is set in the jupyter notebook
+        elif self.template_name is None and self.SomaSecList_name is not None:
+            exec('soma = h.' +  self.SomaSecList_name)
+            for s in soma :
+                self.soma = h.secname()
+
+    def set_cclamp(self, amp):
+        """Used in DepolarizationBlockTest"""
+
+        exec("self.sect_loc=h." + str(self.soma)+"("+str(0.5)+")")
+
+
+        self.stim = h.IClamp(self.sect_loc)
+
+        self.stim.amp = amp
+        self.stim.delay = 500
+        self.stim.dur = 1000
+
+    def run_cclamp(self):
+        """Used in DepolarizationBlockTest"""
+
+        print "- running model", self.name, "stimulus at: ", str(self.soma), "(", str(0.5), ")"
+
+        exec("self.sect_loc=h." + str(self.soma)+"("+str(0.5)+")")
+
+        rec_t = h.Vector()
+        rec_t.record(h._ref_t)
+
+        rec_v = h.Vector()
+        rec_v.record(self.sect_loc._ref_v)
+
+        h.stdinit()
+
+        dt = 0.025
+        h.dt = dt
+        h.steps_per_ms = 1 / dt
+        h.v_init = -65
+
+        h.celsius = 34
+        h.init()
+        h.tstop = 1600
+        h.run()
+
+        t = numpy.array(rec_t)
+        v = numpy.array(rec_v)
+
+        return t, v
+
+    def set_ampa_nmda(self, dend_loc0=[80,0.27]):
+
+        ndend, xloc = dend_loc0
+        self.ampa = h.Exp2Syn(xloc, sec=h.dendrite[ndend])
+        self.ampa.tau1 = self.AMPA_tau1
+        self.ampa.tau2 = self.AMPA_tau2
+
+        self.nmda = h.NMDA_JS(xloc, sec=h.dendrite[ndend])
+
+        self.ndend = ndend
+        self.xloc = xloc
+
+
+    def set_netstim_netcon(self, interval):
+
+        self.ns = h.NetStim()
+        self.ns.interval = interval
+        self.ns.number = 0
+        self.ns.start = self.start
+
+        self.ampa_nc = h.NetCon(self.ns, self.ampa, 0, 0, 0)
+        self.nmda_nc = h.NetCon(self.ns, self.nmda, 0, 0, 0)
+
+
+    def set_num_weight(self, number=1, AMPA_weight=0.0004):
+
+        self.ns.number = number
+        self.ampa_nc.weight[0] = AMPA_weight
+        self.nmda_nc.weight[0] =AMPA_weight/0.2
+
+    def run_syn(self):
+
+        # initiate recording
+        rec_t = h.Vector()
+        rec_t.record(h._ref_t)
+
+        rec_v = h.Vector()
+        rec_v.record(h.soma(0.5)._ref_v)
+
+        rec_v_dend = h.Vector()
+        rec_v_dend.record(h.dendrite[self.ndend](self.xloc)._ref_v)
+
+        print "- running model", self.name
+        # initialze and run
+        #h.load_file("stdrun.hoc")
+        h.stdinit()
+
+        dt = 0.025
+        h.dt = dt
+        h.steps_per_ms = 1 / dt
+        h.v_init = -65
+
+        h.celsius = 34
+        h.init()
+        h.tstop = 300
+        h.run()
+
+        # get recordings
+        t = numpy.array(rec_t)
+        v = numpy.array(rec_v)
+        v_dend = numpy.array(rec_v_dend)
+
+        return t, v, v_dend
+
+    def set_cclamp_somatic_feature(self, amp, delay, dur, section_stim, loc_stim):
+
+        """Used in SomaticFeaturesTest"""
+
+        exec("self.sect_loc=h." + str(section_stim)+"("+str(loc_stim)+")")
+
+
+        self.stim = h.IClamp(self.sect_loc)
+        self.stim.amp = amp
+        self.stim.delay = delay
+        self.stim.dur = dur
+
+    def run_cclamp_somatic_feature(self, section_rec, loc_rec):
+
+        """Used in SomaticFeaturesTest"""
+
+        print "- running model", self.name, "stimulus at: ", str(section_rec)+"("+str(loc_rec)+")"
+
+        rec_t = h.Vector()
+        rec_t.record(h._ref_t)
+
+        rec_v = h.Vector()
+        rec_v.record(self.sect_loc._ref_v)
+
+        h.stdinit()
+
+        dt = 0.025
+        h.dt = dt
+        h.steps_per_ms = 1 / dt
+        h.v_init = -65
+
+        h.celsius = 34
+        h.init()
+        h.tstop = 1600
+        h.run()
+
+        t = numpy.array(rec_t)
+        v = numpy.array(rec_v)
+
+        return t, v
+
+
 class KaliFreund(sciunit.Model,
                  ReceivesCurrent,
                  ProducesMembranePotential):

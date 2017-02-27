@@ -59,8 +59,8 @@
         "mean feature error": 3.526692143323932, 
         "feature error sd": 0.0
     }, 
-    "inv_third_ISI.Step1.0": {
-        "mean feature error": 12.823452588267292, 
+    "inv_fifth_ISI.Step1.0": {
+        "mean feature error": 16.939607799928776, 
         "feature error sd": 0.0
     }, 
     "inv_fifth_ISI.Step0.6": {
@@ -68,8 +68,8 @@
         "feature error sd": 0.0
     }, 
     "AHP_depth.Step1.0": {
-        "mean feature error": 2.7013432492409564, 
-        "feature error sd": 0.31132916792560944
+        "mean feature error": 2.6498446802805828, 
+        "feature error sd": 0.0
     }, 
     "inv_fifth_ISI.Step0.2": {
         "mean feature error": 0.18367570860401486, 
@@ -107,8 +107,8 @@
         "mean feature error": 7.9332241638237866, 
         "feature error sd": 0.0
     }, 
-    "inv_fifth_ISI.Step1.0": {
-        "mean feature error": 16.939607799928776, 
+    "inv_third_ISI.Step1.0": {
+        "mean feature error": 12.823452588267292, 
         "feature error sd": 0.0
     }, 
     "inv_first_ISI.Step1.0": {
@@ -170,10 +170,6 @@
     "inv_third_ISI.Step0.2": {
         "mean feature error": 0.40545752221071873, 
         "feature error sd": 0.0
-    }, 
-    "AP_duration_half_width.Step1.0": {
-        "mean feature error": 3.2668025559190377, 
-        "feature error sd": 0.56680317831949667
     }, 
     "time_to_last_spike.Step1.0": {
         "mean feature error": 0.91374779182945864, 

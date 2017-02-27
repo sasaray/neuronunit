@@ -157,7 +157,7 @@ def zscore3(observation, prediction):
     feature_results_dict={}
 
     for i in range (0, len(features_names)):
-        p_value = prediction[features_names[i]]['feature values']
+        p_value = prediction[features_names[i]]['feature mean']
         o_mean = float(observation[features_names[i]]['Mean'])
         o_std = float(observation[features_names[i]]['Std'])
 
@@ -238,7 +238,7 @@ class DepolarizationBlockTest(Test):
 		self.directory='./temp_data/'
 		self.directory_results='./results/'
 		self.directory_figs='./figs/'
-
+		self.npool = 4
 
 		description = "Tests if the model enters depolarization block under current injection of increasing amplitudes."
 
@@ -483,8 +483,7 @@ class DepolarizationBlockTest(Test):
 	def generate_prediction(self, model):
 		"""Implementation of sciunit.Test.generate_prediction."""
 
-		npool = 4
-		pool = multiprocessing.Pool(npool)
+		pool = multiprocessing.Pool(self.npool)
 		#amps = numpy.arange(0,3.55,0.05)
 		amps = numpy.arange(0,1.65,0.05)
 
@@ -1769,20 +1768,17 @@ class ObliqueIntegrationTest(Test):
 
 		traces = []
 
-		global model_name
-		model_name = model.name
+		global model_name_oblique
+		model_name_oblique = model.name
 
 
-		npool0 = 4
-		pool0 = multiprocessing.Pool(npool0)
+		pool0 = multiprocessing.Pool(self.npool0)
 
 		binsearch_ = functools.partial(self.binsearch, model)
 		result0 = pool0.map_async(binsearch_, model.dend_loc)
 		results0 = result0.get()
 
-
-		npool = 4
-		pool = multiprocessing.Pool(npool)
+		pool = multiprocessing.Pool(self.npool)
 		max_num_syn=10
 
 		num = numpy.arange(0,max_num_syn+1)
@@ -1861,7 +1857,11 @@ class ObliqueIntegrationTest(Test):
 		                'model_mean_async_nonlin':str(mean_nonlin_at_th_asynch), 'model_async_nonlin_std': str(SD_nonlin_at_th_asynch),
 		                'model_n': model_N }
 
-		path_results = self.directory_results + model_name + '/'
+		prediction_json = dict(prediction)
+		for key, value in prediction_json .iteritems():
+			prediction_json[key] = str(value)
+
+		path_results = self.directory_results + model_name_oblique + '/'
 		if not os.path.exists(path_results):
 			os.makedirs(path_results)
 		file_name_json = path_results + 'oblique_model_features.json'
@@ -1875,7 +1875,7 @@ class ObliqueIntegrationTest(Test):
 	def compute_score(self, observation, prediction):
 		"""Implementation of sciunit.Test.score_prediction."""
 
-		path_results = self.directory_results + model_name + '/'
+		path_results = self.directory_results + model_name_oblique + '/'
 		if not os.path.exists(path_results):
 			os.makedirs(path_results)
 		file_name = path_results + 'oblique_features.p'
@@ -1889,7 +1889,7 @@ class ObliqueIntegrationTest(Test):
 
 		score=P_Value(score0)
 
-		path_figs = self.directory_figs + 'oblique/' + model_name + '/'
+		path_figs = self.directory_figs + 'oblique/' + model_name_oblique + '/'
 
 		if not os.path.exists(path_figs):
 		    os.makedirs(path_figs)
@@ -1929,9 +1929,10 @@ class SomaticFeaturesTest(Test):
 		self.directory='./temp_data/'
 		self.directory_figs='./figs/'
 		self.directory_results='./results/'
+		self.npool = 4
 
-		with open('./stimfeat/PC_newfeat_No14112401_15012303-m990803_stimfeat.json') as f:
-		    self.config = json.load(f, object_pairs_hook=collections.OrderedDict)
+		#with open('./stimfeat/PC_newfeat_No14112401_15012303-m990803_stimfeat.json') as f:
+		    #self.config = json.load(f, object_pairs_hook=collections.OrderedDict)
 
 		description = "Tests some somatic features under current injection of increasing amplitudes."
 
@@ -2113,11 +2114,10 @@ class SomaticFeaturesTest(Test):
 	def generate_prediction(self, model):
 		"""Implementation of sciunit.Test.generate_prediction."""
 
-		global model_name
-		model_name = model.name
+		global model_name_soma
+		model_name_soma = model.name
 
-		npool = 4
-		pool = multiprocessing.Pool(npool)
+		pool = multiprocessing.Pool(self.npool)
 
 		stimuli_list=self.create_stimuli_list()
 
@@ -2135,7 +2135,7 @@ class SomaticFeaturesTest(Test):
 		for i in range (0,len(feature_results)):
 		    feature_results_dict.update(feature_results[i])  #concatenate dictionaries
 
-		path = self.directory_results + model_name + '/'
+		path = self.directory_results + model_name_soma + '/'
 
 		if not os.path.exists(path):
 		    os.makedirs(path)
@@ -2151,30 +2151,32 @@ class SomaticFeaturesTest(Test):
 
 		self.create_figs(model, traces_results, features_names, feature_results_dict, self.observation)
 
-		prediction = feature_results_dict
+		#prediction = feature_results_dict
 
 		soma_features={}
 		needed_keys = { 'feature mean', 'feature sd'}
 		for i in range(len(SomaFeaturesDict['features_names'])):
 			feature_name = SomaFeaturesDict['features_names'][i]
-			soma_features[feature_name] = { key:value for key,value in prediction[feature_name].items() if key in needed_keys }
+			soma_features[feature_name] = { key:value for key,value in feature_results_dict[feature_name].items() if key in needed_keys }
 
 		file_name_json = path + 'somatic_model_features.json'
 		json.dump(soma_features, open(file_name_json, "wb"), indent=4)
+
+		prediction=soma_features
 
 		return prediction
 
 	def compute_score(self, observation, prediction):
 		"""Implementation of sciunit.Test.score_prediction."""
 
-		path_figs = self.directory_figs + 'soma/' + model_name + '/'
+		path_figs = self.directory_figs + 'soma/' + model_name_soma + '/'
 
 		if not os.path.exists(path_figs):
 		    os.makedirs(path_figs)
 
 		score_sum, feature_results_dict, features_names  = zscore3(observation,prediction)
 
-		path = self.directory_results + model_name + '/'
+		path = self.directory_results + model_name_soma + '/'
 
 		if not os.path.exists(path):
 		    os.makedirs(path)

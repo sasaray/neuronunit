@@ -171,10 +171,6 @@
         "feature mean": 0.0, 
         "feature sd": 0.0
     }, 
-    "AP_duration_half_width.Step1.0": {
-        "feature mean": 0.53089430894264822, 
-        "feature sd": 0.058615574529021629
-    }, 
     "time_to_last_spike.Step1.0": {
         "feature mean": 399.99999999982219, 
         "feature sd": 0.0

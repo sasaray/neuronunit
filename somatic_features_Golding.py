@@ -20,6 +20,8 @@ observation = config['features']
 show_plot=True
 test = tests.SomaticFeaturesTest(observation, force_run=False, show_plot=show_plot)
 
+test.config=config
+
 model = models.Golding()
 
 score = test.judge(model)
