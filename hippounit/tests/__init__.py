@@ -1,4 +1,3 @@
-import inspect
 from quantities.quantity import Quantity
 import sciunit
 from sciunit import Test,Score,ObservationError
@@ -34,7 +33,7 @@ except:
     import pickle
 import gzip
 
-import copy_reg
+import copyreg
 from types import MethodType
 
 from quantities import mV, nA, ms, V, s
@@ -227,6 +226,7 @@ class DepolarizationBlockTest(Test):
 			     observation = {'mean_Ith':None, 'Ith_std':None, 'mean_Veq': None, 'Veq_std': None}  ,
 			     name="Depolarization block test" ,
 				 force_run=False,
+				 base_directory= '/home/osboxes/BBP_project/150904_neuronunit/neuronunit/',
 				show_plot=True):
 
 		Test.__init__(self,observation,name)
@@ -235,9 +235,9 @@ class DepolarizationBlockTest(Test):
 							  		   ReceivesCurrent,)
 
 		self.force_run = force_run
-		self.directory='./temp_data/'
-		self.directory_results='./results/'
-		self.directory_figs='./figs/'
+		self.directory = base_directory + 'temp_data/'
+		self.directory_results = base_directory + 'results/'
+		self.directory_figs = base_directory + 'figs/'
 		self.npool = 4
 
 		description = "Tests if the model enters depolarization block under current injection of increasing amplitudes."
@@ -259,10 +259,10 @@ class DepolarizationBlockTest(Test):
 			trace = {}
 			traces=[]
 
-			print "- running amplitude:", amp
+			print "- running amplitude: " + str(amp)  + " on model: " + model.name + " at: " + str(model.soma) + "(" + str(0.5) + ")"
 
 			# load cell
-			model.initialise()
+			#model.initialise()
 			model.set_cclamp(amp)
 			t, v = model.run_cclamp()
 
@@ -345,12 +345,12 @@ class DepolarizationBlockTest(Test):
 
 		plt.figure(2)
 		fig = plt.gcf()
-		fig.set_size_inches(14, 12)
+		#fig.set_size_inches(14, 12)
 		plt.plot(amps,spikecount_array,'o-', markersize=10)
-		plt.tick_params(labelsize=28)
-		plt.xlabel("I (nA)",fontsize=28)
+		plt.tick_params(labelsize=20)
+		plt.xlabel("I (nA)",fontsize=20)
 		#plt.ylabel("number of APs")
-		plt.ylabel("num. of APs",fontsize=28)
+		plt.ylabel("num. of APs",fontsize=20)
 		plt.margins(0.01)
 		plt.savefig(path_figs + 'number_of_APs' + '.pdf', dpi=600)
 		#plt.savefig(path_figs + 'num. of Aps' + '.pdf')
@@ -523,6 +523,7 @@ class ObliqueIntegrationTest(Test):
 			     name="Oblique integration test" ,
 				 force_run_synapse=False,
 				 force_run_bin_search=False,
+				 base_directory= '/home/osboxes/BBP_project/150904_neuronunit/neuronunit/',
 				show_plot=True):
 
 		Test.__init__(self, observation, name)
@@ -532,9 +533,12 @@ class ObliqueIntegrationTest(Test):
 
 		self.force_run_synapse = force_run_synapse
 		self.force_run_bin_search = force_run_bin_search
-		self.directory='./temp_data/'
-		self.directory_results='./results/'
-		self.directory_figs='./figs/'
+
+		self.directory = base_directory + 'temp_data/'
+		self.directory_results = base_directory + 'results/'
+		self.directory_figs = base_directory + 'figs/'
+
+		self.npool = 4
 
 		description = "Tests the signal integration in oblique dendrites for increasing number of synchronous and asynchronous inputs"
 
@@ -587,7 +591,7 @@ class ObliqueIntegrationTest(Test):
 
 	        print "- number of inputs:", num, "dendrite:", ndend, "xloc", xloc
 
-	        model.initialise()
+	        #model.initialise()
 	        model.set_ampa_nmda([ndend,xloc])
 	        model.set_netstim_netcon(interval)
 	        model.set_num_weight(num, weight)
@@ -622,7 +626,7 @@ class ObliqueIntegrationTest(Test):
 	        c_step_stop= model.c_step_stop
 	        #c_stim=numpy.arange()
 
-	        model.initialise()
+	        #model.initialise()
 	        model.set_ampa_nmda(dend_loc0)
 	        model.set_netstim_netcon(interval)
 
@@ -737,7 +741,7 @@ class ObliqueIntegrationTest(Test):
 	    fig0.tight_layout()
 	    fig0.suptitle('Synchronous inputs (red: dendritic trace, black: somatic trace)', fontsize=22)
 	    for i in range (0,len(dend_loc000)):
-	        plt.subplot(5,2,i+1)
+	        plt.subplot(round(len(dend_loc000)/2.0),2,i+1)
 	        plt.subplots_adjust(hspace = 0.5)
 	        for j, number in enumerate(num):
 	            plt.plot(sep_results[i][j][0][0]['T'],sep_results[i][j][0][0]['V'], 'k')       # somatic traces
@@ -757,7 +761,7 @@ class ObliqueIntegrationTest(Test):
 	    fig0.tight_layout()
 	    fig0.suptitle('Synchronous inputs',fontsize=22)
 	    for i in range (0,len(dend_loc000)):
-	        plt.subplot(5,2,i+1)
+	        plt.subplot(round(len(dend_loc000)/2.0),2,i+1)
 	        plt.subplots_adjust(hspace = 0.5)
 	        for j, number in enumerate(num):
 	            plt.plot(sep_results[i][j][0][0]['T'],sep_results[i][j][0][0]['V'], 'k')       # somatic traces
@@ -1500,7 +1504,7 @@ class ObliqueIntegrationTest(Test):
 	    fig0.tight_layout()
 	    fig0.suptitle('Asynchronous inputs (red: dendritic trace, black: somatic trace)',fontsize=22)
 	    for i in range (0,len(dend_loc000)):
-	        plt.subplot(5,2,i+1)
+	        plt.subplot(round(len(dend_loc000)/2.0),2,i+1)
 	        plt.subplots_adjust(hspace = 0.5)
 	        for j, number in enumerate(num):
 	            plt.plot(sep_results[i][j][0][0]['T'],sep_results[i][j][0][0]['V'], 'k')       # somatic traces
@@ -1519,7 +1523,7 @@ class ObliqueIntegrationTest(Test):
 	    fig0.tight_layout()
 	    fig0.suptitle('Asynchronous inputs',fontsize=22)
 	    for i in range (0,len(dend_loc000)):
-	        plt.subplot(5,2,i+1)
+	        plt.subplot(round(len(dend_loc000)/2.0),2,i+1)
 	        plt.subplots_adjust(hspace = 0.5)
 	        for j, number in enumerate(num):
 	            plt.plot(sep_results[i][j][0][0]['T'],sep_results[i][j][0][0]['V'], 'k')       # somatic traces
@@ -1681,11 +1685,11 @@ class ObliqueIntegrationTest(Test):
 	    plt.savefig(path_figs + 'peak_derivative_plots_async' + '.pdf', dpi=600,)
 
 
-	    fig0, axes0 = plt.subplots(nrows=5, ncols=2)
+	    fig0, axes0 = plt.subplots(nrows=2, ncols=2)
 	    fig0.tight_layout()
 	    fig0.suptitle('Asynchronous inputs', fontsize=15)
 	    for j in range (0,len(dend_loc000)):
-	        plt.subplot(5,2,j+1)
+	        plt.subplot(round(len(dend_loc000)/2.0),2,j+1)
 	        x =numpy.array([])
 	        labels = ['exp. mean\n with SD']
 	        e = numpy.array([async_nonlin_SD])
@@ -1721,11 +1725,11 @@ class ObliqueIntegrationTest(Test):
 	    SEM_nonlin_error_at_th=SD_nonlin_error_at_th/math.sqrt(n)
 
 
-	    fig0, axes0 = plt.subplots(nrows=5, ncols=2)
+	    fig0, axes0 = plt.subplots(nrows=2, ncols=2)
 	    fig0.tight_layout()
 	    fig0.suptitle('Asynchronous inputs', fontsize=15)
 	    for j in range (0,len(dend_loc000)):
-	        plt.subplot(5,2,j+1)
+	        plt.subplot(round(len(dend_loc000)/2.0),2,j+1)
 	        for i in range (0, len(async_nonlin_errors[j])):
 	            plt.plot(x[i], async_nonlin_errors[j][i], 'o')
 
@@ -1772,7 +1776,9 @@ class ObliqueIntegrationTest(Test):
 		model_name_oblique = model.name
 
 
-		pool0 = multiprocessing.Pool(self.npool0)
+		pool0 = multiprocessing.Pool(self.npool)
+
+		print "Adjusting synaptic weights on all the locations ..."
 
 		binsearch_ = functools.partial(self.binsearch, model)
 		result0 = pool0.map_async(binsearch_, model.dend_loc)
@@ -1812,8 +1818,7 @@ class ObliqueIntegrationTest(Test):
 		        e=list(dend_loc000[i])
 		        e.append(num[j])
 		        e.append(results0[i][1])
-
-		        dend_loc_num_weight.append(e)
+		        dend_loc_num_weight.append(e)		#calculates, and adds the synaptic weights needed to a list
 
 		interval_sync=0.1
 
@@ -1822,11 +1827,10 @@ class ObliqueIntegrationTest(Test):
 		results = result.get()
 
 
-		npool1 = 4
-		pool1 = multiprocessing.Pool(npool1)
+		pool1 = multiprocessing.Pool(self.npool)
 
 		interval_async=2
-		#
+
 		run_synapse_ = functools.partial(self.run_synapse, model, interval=interval_async)
 		result_async = pool1.map_async(run_synapse_,dend_loc_num_weight)
 		results_async = result_async.get()
@@ -1846,16 +1850,7 @@ class ObliqueIntegrationTest(Test):
 		                'model_mean_time_to_peak':model_means[7], 'model_time_to_peak_std': model_SDs[7],
 		                'model_mean_async_nonlin':mean_nonlin_at_th_asynch, 'model_async_nonlin_std': SD_nonlin_at_th_asynch,
 		                'model_n': model_N }
-		prediction_json = {'model_mean_threshold':str(model_means[0]), 'model_threshold_std': str(model_SDs[0]),
-		                'model_mean_prox_threshold':str(model_means[1]), 'model_prox_threshold_std': str(model_SDs[1]),
-		                'model_mean_dist_threshold':str(model_means[2]), 'model_dist_threshold_std': str(model_SDs[2]),
-						'model_mean_peak_deriv':str(model_means[3]),'model_peak_deriv_std': str(model_SDs[3]),
-		                'model_mean_nonlin_at_th':str(model_means[4]), 'model_nonlin_at_th_std': str(model_SDs[4]),
-		                'model_mean_nonlin_suprath':str(model_means[5]), 'model_nonlin_suprath_std': str(model_SDs[5]),
-		                'model_mean_amp_at_th':str(model_means[6]),'model_amp_at_th_std': str(model_SDs[6]),
-		                'model_mean_time_to_peak':str(model_means[7]), 'model_time_to_peak_std': str(model_SDs[7]),
-		                'model_mean_async_nonlin':str(mean_nonlin_at_th_asynch), 'model_async_nonlin_std': str(SD_nonlin_at_th_asynch),
-		                'model_n': model_N }
+
 
 		prediction_json = dict(prediction)
 		for key, value in prediction_json .iteritems():
@@ -1918,6 +1913,7 @@ class SomaticFeaturesTest(Test):
 			     observation = {}  ,
 			     name="Somatic features test" ,
 				 force_run=False,
+				 base_directory= '/home/osboxes/BBP_project/150904_neuronunit/neuronunit/',
 				show_plot=True):
 
 		Test.__init__(self,observation,name)
@@ -1926,9 +1922,10 @@ class SomaticFeaturesTest(Test):
 							  		   ReceivesCurrent,)
 
 		self.force_run = force_run
-		self.directory='./temp_data/'
-		self.directory_figs='./figs/'
-		self.directory_results='./results/'
+
+		self.directory = base_directory + 'temp_data/'
+		self.directory_figs = base_directory + 'figs/'
+		self.directory_results = base_directory + 'results/'
 		self.npool = 4
 
 		#with open('./stimfeat/PC_newfeat_No14112401_15012303-m990803_stimfeat.json') as f:
@@ -1998,11 +1995,11 @@ class SomaticFeaturesTest(Test):
 
 		    if self.force_run or (os.path.isfile(file_name) is False):
 
-		        print "running stimulus: " + stimulus_name
-
-		        model.initialise()
+		        #model.initialise()
 		        stim_section_name = model.translate(stim_section_name, distance=0)
 		        rec_section_name = model.translate(rec_section_name, distance=0)
+		        print "running stimulus: " + stimulus_name + " on model: " + model.name + " at: " + str(stim_section_name)+"("+str(stim_location_x)+")"
+
 		        model.set_cclamp_somatic_feature(float(amplitude), float(delay), float(duration), stim_section_name, stim_location_x)
 		        t,v = model.run_cclamp_somatic_feature(rec_section_name, rec_location_x)
 
@@ -2210,4 +2207,4 @@ class SomaticFeaturesTest(Test):
 		score=ZScore3(score_sum)
 		return score
 
-copy_reg.pickle(MethodType, _pickle_method, _unpickle_method)
+copyreg.pickle(MethodType, _pickle_method, _unpickle_method)

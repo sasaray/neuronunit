@@ -19,17 +19,21 @@ class Model(sciunit.Model,
         self.hocpath = None
         self.template_name = None
         self.SomaSecList_name = None
+        self.max_dist_from_soma = None
 
         self.name = name
         self.threshold = -20
         self.stim = None
-        self.soma = "soma"
+        self.soma = None
         sciunit.Model.__init__(self, name=name)
 
         self.c_step_start = 0.00004
         self.c_step_stop = 0.000004
         self.c_minmax = numpy.array([0.00004, 0.004])
-        self.dend_loc = [[80,0.27],[80,0.83],[54,0.16],[54,0.95],[52,0.38],[52,0.83],[53,0.17],[53,0.7],[28,0.35],[28,0.78]]
+
+        self.ObliqueSecList_name = None
+        self.TrunkSecList_name = None
+        self.dend_loc = []  #self.dend_loc = [['dendrite[80]',0.27],['dendrite[80]',0.83],['dendrite[54]',0.16],['dendrite[54]',0.95],['dendrite[52]',0.38],['dendrite[52]',0.83],['dendrite[53]',0.17],['dendrite[53]',0.7],['dendrite[28]',0.35],['dendrite[28]',0.78]]
 
         self.AMPA_tau1 = 0.1
         self.AMPA_tau2 = 2
@@ -59,15 +63,20 @@ class Model(sciunit.Model,
 
     def initialise(self):
         # load cell
-        h.load_file(self.hocpath)
         h.load_file("stdrun.hoc")
+        h.load_file(self.hocpath)
+
 
         if self.template_name is not None and self.SomaSecList_name is not None:
+
             h('objref testcell')
             h('testcell = new ' + self.template_name)
-            exec('soma = h.' + self.template_name + '.'+ self.SomaSecList_name)
+
+            exec('soma = h.testcell.'+ self.SomaSecList_name)
+
             for s in soma :
                 self.soma = h.secname()
+
         elif self.template_name is not None and self.SomaSecList_name is None:
             h('objref testcell')
             h('testcell = new ' + self.template_name)
@@ -76,12 +85,12 @@ class Model(sciunit.Model,
             exec('soma = h.' +  self.SomaSecList_name)
             for s in soma :
                 self.soma = h.secname()
+        # if both is None, the model is loaded, self.soma will be used
 
     def set_cclamp(self, amp):
         """Used in DepolarizationBlockTest"""
 
         exec("self.sect_loc=h." + str(self.soma)+"("+str(0.5)+")")
-
 
         self.stim = h.IClamp(self.sect_loc)
 
@@ -92,7 +101,7 @@ class Model(sciunit.Model,
     def run_cclamp(self):
         """Used in DepolarizationBlockTest"""
 
-        print "- running model", self.name, "stimulus at: ", str(self.soma), "(", str(0.5), ")"
+        #print "- running model", self.name, "stimulus at: ", str(self.soma), "(", str(0.5), ")"
 
         exec("self.sect_loc=h." + str(self.soma)+"("+str(0.5)+")")
 
@@ -119,20 +128,104 @@ class Model(sciunit.Model,
 
         return t, v
 
+    def find_good_obliques(self):
+        """Used in ObliqueIntegrationTest"""
+
+        good_obliques = h.SectionList()
+        self.dend_loc=[]
+
+        if self.template_name is not None:
+
+            exec('oblique_dendrites=h.testcell.' + self.ObliqueSecList_name)   # so we can have the name of the section list as a string given by the user
+            #exec('oblique_dendrites = h.' + oblique_seclist_name)
+            exec('trunk=h.testcell.' + self.TrunkSecList_name)
+        else:
+            exec('oblique_dendrites=h.' + self.ObliqueSecList_name)   # so we can have the name of the section list as a string given by the user
+            #exec('oblique_dendrites = h.' + oblique_seclist_name)
+            exec('trunk=h.' + self.TrunkSecList_name)
+
+        for sec in oblique_dendrites:
+            h(self.soma + ' ' +'distance()') #set soma as the origin
+            parent = h.SectionRef(sec).parent
+            child_num = h.SectionRef(sec).nchild()
+            dist = h.distance(0)
+            #print 'SEC: ', sec.name()
+            #print 'NCHILD: ', child_num
+            #print 'PARENT: ', parent.name()
+            #print 'DIST: ', h.distance(0)
+
+            for trunk_sec in trunk:
+                if h.issection(parent.name()) and dist < self.max_dist_from_soma and child_num == 0:   # true if string (parent.name()) is contained in the name of the currently accessed section.trunk_sec is the accessed section,
+                    #print sec.name(), parent.name()
+                    h('access ' + sec.name())         # only currently accessed section can be added to hoc SectionList
+                    good_obliques.append(sec.name())
+
+
+        for sec in good_obliques:
+
+            dend_loc_prox=[]
+            dend_loc_dist=[]
+            seg_list_prox=[]
+            seg_list_dist=[]
+
+            h(sec.name() + ' ' +'distance()')  #set the 0 point of the section as the origin
+            #print sec.name()
+
+
+            for seg in sec:
+                #print seg.x, h.distance(seg.x)
+                if h.distance(seg.x) > 5 and h.distance(seg.x) < 50:
+                    seg_list_prox.append(seg.x)
+                if h.distance(seg.x) > 60 and h.distance(seg.x) < 126:
+                    seg_list_dist.append(seg.x)
+
+            #print seg_list_prox
+            #print seg_list_dist
+
+            if len(seg_list_prox) > 1:
+                s = int(round(len(seg_list_prox)/2.0)-1)
+                dend_loc_prox.append(sec.name())
+                dend_loc_prox.append(seg_list_prox[s])
+            else:
+                dend_loc_prox.append(sec.name())
+                dend_loc_prox.append(seg_list_prox[0])
+
+            if len(seg_list_dist) > 1:
+                s = int(round(len(seg_list_dist)/2.0)-1)
+                dend_loc_dist.append(sec.name())
+                dend_loc_dist.append(seg_list_dist[s])
+            elif len(seg_list_dist) == 1:
+                dend_loc_dist.append(sec.name())
+                dend_loc_dist.append(seg_list_dist[0])
+            elif len(seg_list_dist) == 0:                # if the dendrite is not long enough to meet the criteria, we stimulate its end
+                dend_loc_dist.append(sec.name())
+                dend_loc_dist.append(0.9)
+
+
+            self.dend_loc.append(dend_loc_prox)
+            self.dend_loc.append(dend_loc_dist)
+
+        print 'Dendrites and locations to be tested: ', self.dend_loc
+
     def set_ampa_nmda(self, dend_loc0=[80,0.27]):
+        """Used in ObliqueIntegrationTest"""
 
         ndend, xloc = dend_loc0
-        self.ampa = h.Exp2Syn(xloc, sec=h.dendrite[ndend])
+
+        exec("self.dendrite=h." + ndend)
+
+        self.ampa = h.Exp2Syn(xloc, sec=self.dendrite)
         self.ampa.tau1 = self.AMPA_tau1
         self.ampa.tau2 = self.AMPA_tau2
 
-        self.nmda = h.NMDA_JS(xloc, sec=h.dendrite[ndend])
+        self.nmda = h.NMDA_JS(xloc, sec=self.dendrite)
 
         self.ndend = ndend
         self.xloc = xloc
 
 
     def set_netstim_netcon(self, interval):
+        """Used in ObliqueIntegrationTest"""
 
         self.ns = h.NetStim()
         self.ns.interval = interval
@@ -144,24 +237,28 @@ class Model(sciunit.Model,
 
 
     def set_num_weight(self, number=1, AMPA_weight=0.0004):
+        """Used in ObliqueIntegrationTest"""
 
         self.ns.number = number
         self.ampa_nc.weight[0] = AMPA_weight
-        self.nmda_nc.weight[0] =AMPA_weight/0.2
+        self.nmda_nc.weight[0] =AMPA_weight/0.4
 
     def run_syn(self):
+        """Used in ObliqueIntegrationTest"""
+
+        exec("self.sect_loc=h." + str(self.soma)+"("+str(0.5)+")")
 
         # initiate recording
         rec_t = h.Vector()
         rec_t.record(h._ref_t)
 
         rec_v = h.Vector()
-        rec_v.record(h.soma(0.5)._ref_v)
+        rec_v.record(self.sect_loc._ref_v)
 
         rec_v_dend = h.Vector()
-        rec_v_dend.record(h.dendrite[self.ndend](self.xloc)._ref_v)
+        rec_v_dend.record(self.dendrite(self.xloc)._ref_v)
 
-        print "- running model", self.name
+        #print "- running model", self.name
         # initialze and run
         #h.load_file("stdrun.hoc")
         h.stdinit()
@@ -184,7 +281,6 @@ class Model(sciunit.Model,
         return t, v, v_dend
 
     def set_cclamp_somatic_feature(self, amp, delay, dur, section_stim, loc_stim):
-
         """Used in SomaticFeaturesTest"""
 
         exec("self.sect_loc=h." + str(section_stim)+"("+str(loc_stim)+")")
@@ -199,7 +295,7 @@ class Model(sciunit.Model,
 
         """Used in SomaticFeaturesTest"""
 
-        print "- running model", self.name, "stimulus at: ", str(section_rec)+"("+str(loc_rec)+")"
+        #print "- running model", self.name, "stimulus at: ", str(section_rec)+"("+str(loc_rec)+")"
 
         rec_t = h.Vector()
         rec_t.record(h._ref_t)
