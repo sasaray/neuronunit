@@ -105,7 +105,7 @@ def tiled_figure(figname='', frames=1, columns=2, figs=collections.OrderedDict()
                   'xtick.labelsize': 6,
                   'ytick.labelsize': 6,
                   'legend.borderpad': 0.2,
-                  'legend.linewidth': 0.1,
+                  'legend.markerscale': 0.1,
                   'legend.loc': 'best',
                   'legend.columnspacing': 4,
                   'text.usetex': False,
