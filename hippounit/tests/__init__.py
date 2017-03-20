@@ -3,7 +3,7 @@ import sciunit
 from sciunit import Test,Score,ObservationError
 from neuronunit.capabilities import ProducesMembranePotential
 from neuronunit.capabilities import ReceivesCurrent
-from sciunit.comparators import ZScore, assert_dimensionless# Converters.
+from sciunit.utils import assert_dimensionless# Converters.
 from sciunit.scores import ErrorScore,BooleanScore,ZScore # Scores.
 
 try:
