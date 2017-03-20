@@ -4,7 +4,7 @@ from sciunit import Test,Score,ObservationError
 from neuronunit.capabilities import ProducesMembranePotential
 from neuronunit.capabilities import ReceivesCurrent
 from sciunit.utils import assert_dimensionless# Converters.
-from sciunit.scores import ErrorScore,BooleanScore,ZScore # Scores.
+from sciunit.scores import BooleanScore,ZScore # Scores.
 
 try:
 	import numpy
@@ -2108,7 +2108,7 @@ class SomaticFeaturesTest(Test):
 	    plt.savefig(path_figs + 'absolute_features' + '.pdf', dpi=600,)
 
 
-	def generate_prediction(self, model):
+	def generate_prediction(self, model, verbose=False):
 		"""Implementation of sciunit.Test.generate_prediction."""
 
 		global model_name_soma
@@ -2163,7 +2163,7 @@ class SomaticFeaturesTest(Test):
 
 		return prediction
 
-	def compute_score(self, observation, prediction):
+	def compute_score(self, observation, prediction, verbose=False):
 		"""Implementation of sciunit.Test.score_prediction."""
 
 		path_figs = self.directory_figs + 'soma/' + model_name_soma + '/'
