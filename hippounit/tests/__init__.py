@@ -2108,7 +2108,7 @@ class SomaticFeaturesTest(Test):
 	    plt.savefig(path_figs + 'absolute_features' + '.pdf', dpi=600,)
 
 
-	def generate_prediction(self, model):
+	def generate_prediction(self, model, verbose=False):
 		"""Implementation of sciunit.Test.generate_prediction."""
 
 		global model_name_soma
@@ -2163,7 +2163,7 @@ class SomaticFeaturesTest(Test):
 
 		return prediction
 
-	def compute_score(self, observation, prediction):
+	def compute_score(self, observation, prediction, verbose=False):
 		"""Implementation of sciunit.Test.score_prediction."""
 
 		path_figs = self.directory_figs + 'soma/' + model_name_soma + '/'
