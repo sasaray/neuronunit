@@ -97,7 +97,7 @@ def tiled_figure(figname='', frames=1, columns=2, figs=collections.OrderedDict()
         params = {'backend': 'ps',
                   'axes.labelsize': 6,
                   'axes.linewidth' : 0.5,
-                  'figure.titlesize ': 8,
+                  'axes.titlesize': 8,
                   'text.fontsize': 8,
                   'font.size': 8,
                   'axes.titlesize': 8,
