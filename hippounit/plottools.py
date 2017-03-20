@@ -107,7 +107,7 @@ def tiled_figure(figname='', frames=1, columns=2, figs=collections.OrderedDict()
                   'legend.borderpad': 0.2,
                   'legend.linewidth': 0.1,
                   'legend.loc': 'best',
-                  'legend.ncol': 4,
+                  'legend.columnspacing': 4,
                   'text.usetex': False,
                   'pdf.fonttype': 42,
                   'figure.figsize': figsize}
