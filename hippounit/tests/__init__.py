@@ -322,9 +322,9 @@ class DepolarizationBlockTest(Test):
 		    Veq_index=Ith_index+1
 		    plt.figure(1)
 		    plt.plot(results[Veq_index][0]['T'],results[Veq_index][0]['V'])
-		    plt.title("somatic response at Ith + 0.05 nA", font.size=20)
-		    plt.xlabel("time (ms)", font.size=20)
-		    plt.ylabel("Somatic voltage (mV)", font.size=20)
+		    plt.title("somatic response at Ith + 0.05 nA", fontsize=20)
+		    plt.xlabel("time (ms)", fontsize=20)
+		    plt.ylabel("Somatic voltage (mV)", fontsize=20)
 		    plt.tick_params(labelsize=18)
 		    plt.savefig(path_figs + 'somatic_resp_at_depol_block' + '.pdf', dpi=300)
 
@@ -348,9 +348,9 @@ class DepolarizationBlockTest(Test):
 		#fig.set_size_inches(14, 12)
 		plt.plot(amps,spikecount_array,'o-', markersize=10)
 		plt.tick_params(labelsize=20)
-		plt.xlabel("I (nA)",font.size=20)
+		plt.xlabel("I (nA)",fontsize=20)
 		#plt.ylabel("number of APs")
-		plt.ylabel("num. of APs",font.size=20)
+		plt.ylabel("num. of APs",fontsize=20)
 		plt.margins(0.01)
 		plt.savefig(path_figs + 'number_of_APs' + '.pdf', dpi=600)
 		#plt.savefig(path_figs + 'num. of Aps' + '.pdf')
@@ -361,9 +361,9 @@ class DepolarizationBlockTest(Test):
 
 		plt.figure(3)
 		plt.plot(results[Ith_index][0]['T'],results[Ith_index][0]['V'])
-		plt.title("somatic response at Ith", font.size=20)
-		plt.xlabel("time (ms)", font.size=20)
-		plt.ylabel("Somatic voltage (mV)", font.size=20)
+		plt.title("somatic response at Ith", fontsize=20)
+		plt.xlabel("time (ms)", fontsize=20)
+		plt.ylabel("Somatic voltage (mV)", fontsize=20)
 		plt.tick_params(labelsize=18)
 		plt.savefig(path_figs + 'somatic_resp_at_Ith' + '.pdf', dpi=600)
 
@@ -739,17 +739,17 @@ class ObliqueIntegrationTest(Test):
 
 	    fig0, axes0 = plt.subplots(nrows=2, ncols=1)
 	    fig0.tight_layout()
-	    fig0.suptitle('Synchronous inputs (red: dendritic trace, black: somatic trace)', font.size=22)
+	    fig0.suptitle('Synchronous inputs (red: dendritic trace, black: somatic trace)', fontsize=22)
 	    for i in range (0,len(dend_loc000)):
 	        plt.subplot(round(len(dend_loc000)/2.0),2,i+1)
 	        plt.subplots_adjust(hspace = 0.5)
 	        for j, number in enumerate(num):
 	            plt.plot(sep_results[i][j][0][0]['T'],sep_results[i][j][0][0]['V'], 'k')       # somatic traces
 	            plt.plot(sep_results[i][j][1][0]['T'],sep_results[i][j][1][0]['V'], 'r')        # dendritic traces
-	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]), font.size=22)
+	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]), fontsize=22)
 
-	        plt.xlabel("time (ms)", font.size=22)
-	        plt.ylabel("Voltage (mV)", font.size=22)
+	        plt.xlabel("time (ms)", fontsize=22)
+	        plt.ylabel("Voltage (mV)", fontsize=22)
 	        plt.xlim(140, 250)
 	        plt.tick_params(labelsize=20)
 
@@ -759,16 +759,16 @@ class ObliqueIntegrationTest(Test):
 
 	    fig0, axes0 = plt.subplots(nrows=2, ncols=1)
 	    fig0.tight_layout()
-	    fig0.suptitle('Synchronous inputs',font.size=22)
+	    fig0.suptitle('Synchronous inputs',fontsize=22)
 	    for i in range (0,len(dend_loc000)):
 	        plt.subplot(round(len(dend_loc000)/2.0),2,i+1)
 	        plt.subplots_adjust(hspace = 0.5)
 	        for j, number in enumerate(num):
 	            plt.plot(sep_results[i][j][0][0]['T'],sep_results[i][j][0][0]['V'], 'k')       # somatic traces
-	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]),font.size=22)
+	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]),fontsize=22)
 
-	        plt.xlabel("time (ms)",font.size=22)
-	        plt.ylabel("Somatic voltage (mV)",font.size=22)
+	        plt.xlabel("time (ms)",fontsize=22)
+	        plt.ylabel("Somatic voltage (mV)",fontsize=22)
 	        plt.xlim(140, 250)
 	        plt.tick_params(labelsize=20)
 	    fig0 = plt.gcf()
@@ -1354,7 +1354,7 @@ class ObliqueIntegrationTest(Test):
 	    gs = gridspec.GridSpec(1, 4,width_ratios=[4,1,2,1])
 	    fig3, axes3 = plt.subplots(nrows=1, ncols=4)
 	    fig3.tight_layout()
-	    fig3.suptitle('Synchronous inputs', font.size=15)
+	    fig3.suptitle('Synchronous inputs', fontsize=15)
 	    #plt.subplot(1,4,1)
 	    plt.subplot(gs[0])
 
@@ -1374,7 +1374,7 @@ class ObliqueIntegrationTest(Test):
 	    plt.tick_params(labelsize=15)
 	    plt.margins(0.1)
 	    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0, prop={'size':12})
-	    plt.ylabel("Voltage (mV)", font.size=15)
+	    plt.ylabel("Voltage (mV)", fontsize=15)
 
 	    #plt.subplot(1,4,2)
 	    plt.subplot(gs[1])
@@ -1393,7 +1393,7 @@ class ObliqueIntegrationTest(Test):
 	    plt.tick_params(labelsize=15)
 	    plt.margins(0.3)
 	    #plt.legend(loc=1, prop={'size':10})
-	    plt.ylabel("peak dV/dt(V/s)", font.size=15)
+	    plt.ylabel("peak dV/dt(V/s)", fontsize=15)
 
 	    #plt.subplot(1,4,3)
 	    plt.subplot(gs[2])
@@ -1414,7 +1414,7 @@ class ObliqueIntegrationTest(Test):
 	    plt.tick_params(labelsize=15)
 	    plt.margins(0.1)
 	    #plt.legend(loc=2, prop={'size':10})
-	    plt.ylabel("degree of nonlinearity(%)", font.size=15)
+	    plt.ylabel("degree of nonlinearity(%)", fontsize=15)
 
 	    #plt.subplot(1,4,4)
 	    plt.subplot(gs[3])
@@ -1433,7 +1433,7 @@ class ObliqueIntegrationTest(Test):
 	    plt.tick_params(labelsize=15)
 	    plt.margins(0.3)
 	    #plt.legend(loc=1, prop={'size':10})
-	    plt.ylabel("time to peak (ms)", font.size=15)
+	    plt.ylabel("time to peak (ms)", fontsize=15)
 
 	    fig = plt.gcf()
 	    fig.set_size_inches(22, 18)
@@ -1441,7 +1441,7 @@ class ObliqueIntegrationTest(Test):
 
 	    plt.figure()
 	# mean errors plot
-	    plt.title('Synchronous inputs', font.size=15)
+	    plt.title('Synchronous inputs', fontsize=15)
 	    e_errors = numpy.array([sd_threshold_errors, sd_prox_threshold_errors, sd_dist_threshold_errors, sd_peak_deriv_errors, sd_nonlin_errors, suprath_sd_nonlin_errors, sd_amplitude_errors, sd_time_to_peak_errors])
 	    x_errors =numpy.array([1,2,3,4,5,6,7,8])
 	    y_errors = numpy.array([mean_threshold_errors,  mean_prox_threshold_errors, mean_dist_threshold_errors, mean_peak_deriv_errors, mean_nonlin_errors, suprath_mean_nonlin_errors, mean_amplitude_errors, mean_time_to_peak_errors ])
@@ -1450,7 +1450,7 @@ class ObliqueIntegrationTest(Test):
 	    plt.xticks(x_errors, labels_errors, rotation=20)
 	    plt.tick_params(labelsize=15)
 	    plt.margins(0.1)
-	    plt.ylabel("model mean errors in unit of the experimental SD (with SD)", font.size=15)
+	    plt.ylabel("model mean errors in unit of the experimental SD (with SD)", fontsize=15)
 
 	    fig = plt.gcf()
 	    fig.set_size_inches(16, 18)
@@ -1502,17 +1502,17 @@ class ObliqueIntegrationTest(Test):
 
 	    fig0, axes0 = plt.subplots(nrows=2, ncols=1)
 	    fig0.tight_layout()
-	    fig0.suptitle('Asynchronous inputs (red: dendritic trace, black: somatic trace)',font.size=22)
+	    fig0.suptitle('Asynchronous inputs (red: dendritic trace, black: somatic trace)',fontsize=22)
 	    for i in range (0,len(dend_loc000)):
 	        plt.subplot(round(len(dend_loc000)/2.0),2,i+1)
 	        plt.subplots_adjust(hspace = 0.5)
 	        for j, number in enumerate(num):
 	            plt.plot(sep_results[i][j][0][0]['T'],sep_results[i][j][0][0]['V'], 'k')       # somatic traces
 	            plt.plot(sep_results[i][j][1][0]['T'],sep_results[i][j][1][0]['V'], 'r')        # dendritic traces
-	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]),font.size=22)
+	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]),fontsize=22)
 
-	        plt.xlabel("time (ms)",font.size=22)
-	        plt.ylabel("Voltage (mV)",font.size=22)
+	        plt.xlabel("time (ms)",fontsize=22)
+	        plt.ylabel("Voltage (mV)",fontsize=22)
 	        plt.xlim(140, 250)
 	        plt.tick_params(labelsize=20)
 	    fig = plt.gcf()
@@ -1521,16 +1521,16 @@ class ObliqueIntegrationTest(Test):
 
 	    fig0, axes0 = plt.subplots(nrows=2, ncols=1)
 	    fig0.tight_layout()
-	    fig0.suptitle('Asynchronous inputs',font.size=22)
+	    fig0.suptitle('Asynchronous inputs',fontsize=22)
 	    for i in range (0,len(dend_loc000)):
 	        plt.subplot(round(len(dend_loc000)/2.0),2,i+1)
 	        plt.subplots_adjust(hspace = 0.5)
 	        for j, number in enumerate(num):
 	            plt.plot(sep_results[i][j][0][0]['T'],sep_results[i][j][0][0]['V'], 'k')       # somatic traces
-	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]),font.size=22)
+	        plt.title('Input in dendrite '+str(dend_loc000[i][0])+ ' at location: ' +str(dend_loc000[i][1]),fontsize=22)
 
-	        plt.xlabel("time (ms)",font.size=22)
-	        plt.ylabel("Somatic voltage (mV)",font.size=22)
+	        plt.xlabel("time (ms)",fontsize=22)
+	        plt.ylabel("Somatic voltage (mV)",fontsize=22)
 	        plt.xlim(140, 250)
 	        plt.tick_params(labelsize=20)
 	    fig = plt.gcf()
@@ -1687,7 +1687,7 @@ class ObliqueIntegrationTest(Test):
 
 	    fig0, axes0 = plt.subplots(nrows=2, ncols=2)
 	    fig0.tight_layout()
-	    fig0.suptitle('Asynchronous inputs', font.size=15)
+	    fig0.suptitle('Asynchronous inputs', fontsize=15)
 	    for j in range (0,len(dend_loc000)):
 	        plt.subplot(round(len(dend_loc000)/2.0),2,j+1)
 	        x =numpy.array([])
@@ -1705,7 +1705,7 @@ class ObliqueIntegrationTest(Test):
 	        plt.xticks(x, labels, rotation=40)
 	        plt.tick_params(labelsize=15)
 	        plt.margins(0.1)
-	        plt.ylabel("Degree of nonlinearity (%)", font.size=15)
+	        plt.ylabel("Degree of nonlinearity (%)", fontsize=15)
 	        plt.title('dendrite '+str(dend_loc000[j][0])+ ' location: ' +str(dend_loc000[j][1]))
 
 	    fig = plt.gcf()
@@ -1727,7 +1727,7 @@ class ObliqueIntegrationTest(Test):
 
 	    fig0, axes0 = plt.subplots(nrows=2, ncols=2)
 	    fig0.tight_layout()
-	    fig0.suptitle('Asynchronous inputs', font.size=15)
+	    fig0.suptitle('Asynchronous inputs', fontsize=15)
 	    for j in range (0,len(dend_loc000)):
 	        plt.subplot(round(len(dend_loc000)/2.0),2,j+1)
 	        for i in range (0, len(async_nonlin_errors[j])):
@@ -1736,7 +1736,7 @@ class ObliqueIntegrationTest(Test):
 	        plt.xticks(x, labels[1:-1], rotation=20)
 	        plt.tick_params(labelsize=15)
 	        plt.margins(0.1)
-	        plt.ylabel("Degree of nonlin. error (%)", font.size=15)
+	        plt.ylabel("Degree of nonlin. error (%)", fontsize=15)
 	        plt.title('dendrite '+str(dend_loc000[j][0])+ ' location: ' +str(dend_loc000[j][1]))
 	    fig = plt.gcf()
 	    fig.set_size_inches(18, 20)
@@ -2081,9 +2081,9 @@ class SomaticFeaturesTest(Test):
 
 	            plt.subplot(4,2,i+1)
 	            plt.plot(traces_results[i][key][0], traces_results[i][key][1])
-	            plt.title(key, font.size=15)
-	            plt.xlabel("ms", font.size=15)
-	            plt.ylabel("mV", font.size=15)
+	            plt.title(key, fontsize=15)
+	            plt.xlabel("ms", fontsize=15)
+	            plt.ylabel("mV", fontsize=15)
 	            plt.xlim(800,1600)
 	            plt.tick_params(labelsize=15)
 
