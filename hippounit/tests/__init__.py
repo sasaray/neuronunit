@@ -358,6 +358,9 @@ class DepolarizationBlockTest(Test):
 		if Ith_index.size > 1:
 			Ith_index = int(Ith_index[-1])
 			Veq_index = int(Veq_index[-1])
+		elif Ith_index.size == 1:
+			Ith_index = int(Ith_index[0])
+			Veq_index = int(Veq_index[0])
 
 		plt.figure(3)
 		plt.plot(results[Ith_index][0]['T'],results[Ith_index][0]['V'])
