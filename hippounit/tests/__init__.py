@@ -480,7 +480,7 @@ class DepolarizationBlockTest(Test):
 			raise ObservationError(("Observation must be of the form "
 									"{'mean':float*mV,'std':float*mV}"))
 
-	def generate_prediction(self, model):
+	def generate_prediction(self, model, verbose=False):
 		"""Implementation of sciunit.Test.generate_prediction."""
 
 		pool = multiprocessing.Pool(self.npool)
@@ -498,7 +498,7 @@ class DepolarizationBlockTest(Test):
 
 		return prediction
 
-	def compute_score(self, observation, prediction):
+	def compute_score(self, observation, prediction, verbose=False):
 		"""Implementation of sciunit.Test.score_prediction."""
 		score0 = zscore2(observation,prediction)
 		score=ZScore2(score0)
@@ -1767,7 +1767,7 @@ class ObliqueIntegrationTest(Test):
 									"{'mean':float*mV,'std':float*mV}"))
 
 
-	def generate_prediction(self, model):
+	def generate_prediction(self, model, verbose=False):
 		"""Implementation of sciunit.Test.generate_prediction."""
 
 		traces = []
@@ -1867,7 +1867,7 @@ class ObliqueIntegrationTest(Test):
 
 		return prediction
 
-	def compute_score(self, observation, prediction):
+	def compute_score(self, observation, prediction, verbose=False):
 		"""Implementation of sciunit.Test.score_prediction."""
 
 		path_results = self.directory_results + model_name_oblique + '/'
