@@ -1007,7 +1007,7 @@ class ObliqueIntegrationTest(Test):
 
 	    # Expected EPSP - Measured EPSP plot
 	    colormap = plt.cm.spectral      #http://matplotlib.org/1.2.1/examples/pylab_examples/show_colormaps.html
-	    plt.gca().set_prop_cycle(plt.cycler('color', colormap(numpy.linspace(0, 0.9, len(sep_results))))
+	    plt.gca().set_prop_cycle(plt.cycler('color', colormap(numpy.linspace(0, 0.9, len(sep_results)))))
 	    for i in range (0, len(sep_results)):
 
 	        plt.plot(sep_soma_expected[i],sep_soma_max_depols[i], '-o', label='dend '+str(dend_loc000[i][0])+ ' loc ' +str(dend_loc000[i][1]))
@@ -1063,7 +1063,7 @@ class ObliqueIntegrationTest(Test):
 	    plt.title('Synchronous inputs')
 	#Derivative plot
 	    colormap = plt.cm.spectral
-	    plt.gca().set_prop_cycle(plt.cycler('color', colormap(numpy.linspace(0, 0.9, len(sep_results))))
+	    plt.gca().set_prop_cycle(plt.cycler('color', colormap(numpy.linspace(0, 0.9, len(sep_results)))))
 	    for i in range (0, len(sep_results)):
 
 	        plt.plot(num,sep_max_dV_dt[i], '-o', label='dend '+str(dend_loc000[i][0])+ ' loc ' +str(dend_loc000[i][1]))
@@ -1634,7 +1634,7 @@ class ObliqueIntegrationTest(Test):
 	    plt.subplot(2,1,1)
 	    # Expected EPSP - Measured EPSP plot
 	    colormap = plt.cm.spectral      #http://matplotlib.org/1.2.1/examples/pylab_examples/show_colormaps.html
-	    plt.gca().set_prop_cycle(plt.cycler('color', colormap(numpy.linspace(0, 0.9, len(sep_results))))
+	    plt.gca().set_prop_cycle(plt.cycler('color', colormap(numpy.linspace(0, 0.9, len(sep_results)))))
 	    for i in range (0, len(sep_results)):
 
 	        plt.plot(sep_soma_expected[i],sep_soma_max_depols[i], '-o', label='dend '+str(dend_loc000[i][0])+ ' loc ' +str(dend_loc000[i][1]))
@@ -1665,7 +1665,7 @@ class ObliqueIntegrationTest(Test):
 	    plt.title('Asynchronous inputs')
 	#Derivative plot
 	    colormap = plt.cm.spectral
-	    plt.gca().set_prop_cycle(plt.cycler('color', colormap(numpy.linspace(0, 0.9, len(sep_results))))
+	    plt.gca().set_prop_cycle(plt.cycler('color', colormap(numpy.linspace(0, 0.9, len(sep_results)))))
 	    for i in range (0, len(sep_results)):
 
 	        plt.plot(num,sep_max_dV_dt[i], '-o', label='dend '+str(dend_loc000[i][0])+ ' loc ' +str(dend_loc000[i][1]))
