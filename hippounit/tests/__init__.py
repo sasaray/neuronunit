@@ -1811,48 +1811,63 @@ class ObliqueIntegrationTest(Test):
 
 		dend_loc000=list(model.dend_loc)
 
-		for i in range(0, len(dend_loc00)):
-		    dend_loc000.remove(dend_loc00[i])       #dend_loc000 does not contain the dendrites in which spike causes somatic AP
+		if len(dend_loc000) > 0:		# if none of the dendrites was able to generate dendritic spike
 
-		for i in range(0, len(dend_loc000)):
+			for i in range(0, len(dend_loc00)):
+			    dend_loc000.remove(dend_loc00[i])       #dend_loc000 does not contain the dendrites in which spike causes somatic AP
 
-		    for j in num:
+			for i in range(0, len(dend_loc000)):
 
-		        e=list(dend_loc000[i])
-		        e.append(num[j])
-		        e.append(results0[i][1])
-		        dend_loc_num_weight.append(e)		#calculates, and adds the synaptic weights needed to a list
+			    for j in num:
 
-		interval_sync=0.1
+			        e=list(dend_loc000[i])
+			        e.append(num[j])
+			        e.append(results0[i][1])
+			        dend_loc_num_weight.append(e)		#calculates, and adds the synaptic weights needed to a list
 
-		run_synapse_ = functools.partial(self.run_synapse, model, interval=interval_sync)
-		result = pool.map_async(run_synapse_,dend_loc_num_weight)
-		results = result.get()
+			interval_sync=0.1
 
-
-		pool1 = multiprocessing.Pool(self.npool)
-
-		interval_async=2
-
-		run_synapse_ = functools.partial(self.run_synapse, model, interval=interval_async)
-		result_async = pool1.map_async(run_synapse_,dend_loc_num_weight)
-		results_async = result_async.get()
-
-		model_means, model_SDs, model_N = self.calcs_plots(model, results, dend_loc000, dend_loc_num_weight)
-
-		mean_nonlin_at_th_asynch, SD_nonlin_at_th_asynch = self.calcs_plots_async(model, results_async, dend_loc000, dend_loc_num_weight)
+			run_synapse_ = functools.partial(self.run_synapse, model, interval=interval_sync)
+			result = pool.map_async(run_synapse_,dend_loc_num_weight)
+			results = result.get()
 
 
-		prediction = {'model_mean_threshold':model_means[0], 'model_threshold_std': model_SDs[0],
-		                'model_mean_prox_threshold':model_means[1], 'model_prox_threshold_std': model_SDs[1],
-		                'model_mean_dist_threshold':model_means[2], 'model_dist_threshold_std': model_SDs[2],
-						'model_mean_peak_deriv':model_means[3],'model_peak_deriv_std': model_SDs[3],
-		                'model_mean_nonlin_at_th':model_means[4], 'model_nonlin_at_th_std': model_SDs[4],
-		                'model_mean_nonlin_suprath':model_means[5], 'model_nonlin_suprath_std': model_SDs[5],
-		                'model_mean_amp_at_th':model_means[6],'model_amp_at_th_std': model_SDs[6],
-		                'model_mean_time_to_peak':model_means[7], 'model_time_to_peak_std': model_SDs[7],
-		                'model_mean_async_nonlin':mean_nonlin_at_th_asynch, 'model_async_nonlin_std': SD_nonlin_at_th_asynch,
-		                'model_n': model_N }
+			pool1 = multiprocessing.Pool(self.npool)
+
+			interval_async=2
+
+			run_synapse_ = functools.partial(self.run_synapse, model, interval=interval_async)
+			result_async = pool1.map_async(run_synapse_,dend_loc_num_weight)
+			results_async = result_async.get()
+
+			model_means, model_SDs, model_N = self.calcs_plots(model, results, dend_loc000, dend_loc_num_weight)
+
+			mean_nonlin_at_th_asynch, SD_nonlin_at_th_asynch = self.calcs_plots_async(model, results_async, dend_loc000, dend_loc_num_weight)
+
+
+			prediction = {'model_mean_threshold':model_means[0], 'model_threshold_std': model_SDs[0],
+			                'model_mean_prox_threshold':model_means[1], 'model_prox_threshold_std': model_SDs[1],
+			                'model_mean_dist_threshold':model_means[2], 'model_dist_threshold_std': model_SDs[2],
+							'model_mean_peak_deriv':model_means[3],'model_peak_deriv_std': model_SDs[3],
+			                'model_mean_nonlin_at_th':model_means[4], 'model_nonlin_at_th_std': model_SDs[4],
+			                'model_mean_nonlin_suprath':model_means[5], 'model_nonlin_suprath_std': model_SDs[5],
+			                'model_mean_amp_at_th':model_means[6],'model_amp_at_th_std': model_SDs[6],
+			                'model_mean_time_to_peak':model_means[7], 'model_time_to_peak_std': model_SDs[7],
+			                'model_mean_async_nonlin':mean_nonlin_at_th_asynch, 'model_async_nonlin_std': SD_nonlin_at_th_asynch,
+			                'model_n': model_N }
+
+		else:
+
+			prediction = {'model_mean_threshold':float('NaN')*mV, 'model_threshold_std': float('NaN')*mV,
+			                'model_mean_prox_threshold':float('NaN')*mV, 'model_prox_threshold_std': float('NaN')*mV,
+			                'model_mean_dist_threshold':float('NaN')*mV, 'model_dist_threshold_std': float('NaN')*mV,
+							'model_mean_peak_deriv':float('NaN')*V / s,'model_peak_deriv_std': float('NaN')*V / s,
+			                'model_mean_nonlin_at_th':float('NaN'), 'model_nonlin_at_th_std': float('NaN'),
+			                'model_mean_nonlin_suprath':float('NaN'), 'model_nonlin_suprath_std': float('NaN'),
+			                'model_mean_amp_at_th':float('NaN') *mV,'model_amp_at_th_std': float('NaN')*mV,
+			                'model_mean_time_to_peak':float('NaN') *ms, 'model_time_to_peak_std': float('NaN')*ms,
+			                'model_mean_async_nonlin':float('NaN'), 'model_async_nonlin_std': float('NaN'),
+			                'model_n': 0.0 }
 
 
 		prediction_json = dict(prediction)
