@@ -1811,8 +1811,8 @@ class ObliqueIntegrationTest(Test):
 
 		dend_loc000=list(model.dend_loc)
 
-			for i in range(0, len(dend_loc00)):
-			    dend_loc000.remove(dend_loc00[i])       #dend_loc000 does not contain the dendrites in which spike causes somatic AP
+		for i in range(0, len(dend_loc00)):
+			dend_loc000.remove(dend_loc00[i])       #dend_loc000 does not contain the dendrites in which spike causes somatic AP
 
 		if len(dend_loc000) > 0:		# if none of the dendrites was able to generate dendritic spike
 			for i in range(0, len(dend_loc000)):
