@@ -91,7 +91,7 @@ def ttest(exp_mean, model_mean, exp_sd, model_sd, exp_n, model_n):
     n1 = exp_n
     n2 = model_n
 
-	if n2 != 0:
+    if n2 != 0:
 	    vn1 = v1 / n1
 	    vn2 = v2 / n2
 
@@ -102,7 +102,7 @@ def ttest(exp_mean, model_mean, exp_sd, model_sd, exp_n, model_n):
 	    t = numpy.divide(d, denom)
 
 	    prob = stats.t.sf(numpy.abs(t), df) * 2  # use np.abs to get upper tail
-	else:
+    else:
 		prob = float('NaN')
 
     return prob
