@@ -91,16 +91,19 @@ def ttest(exp_mean, model_mean, exp_sd, model_sd, exp_n, model_n):
     n1 = exp_n
     n2 = model_n
 
-    vn1 = v1 / n1
-    vn2 = v2 / n2
+	if n2 != 0:
+	    vn1 = v1 / n1
+	    vn2 = v2 / n2
 
-    df = ((vn1 + vn2)**2) / ((vn1**2) / (n1 - 1) + (vn2**2) / (n2 - 1))
+	    df = ((vn1 + vn2)**2) / ((vn1**2) / (n1 - 1) + (vn2**2) / (n2 - 1))
 
-    denom = numpy.sqrt(vn1 + vn2)
-    d = m1 - m2
-    t = numpy.divide(d, denom)
+	    denom = numpy.sqrt(vn1 + vn2)
+	    d = m1 - m2
+	    t = numpy.divide(d, denom)
 
-    prob = stats.t.sf(numpy.abs(t), df) * 2  # use np.abs to get upper tail
+	    prob = stats.t.sf(numpy.abs(t), df) * 2  # use np.abs to get upper tail
+	else:
+		prob = float('NaN')
 
     return prob
 
