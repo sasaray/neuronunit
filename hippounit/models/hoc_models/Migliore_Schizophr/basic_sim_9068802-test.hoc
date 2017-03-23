@@ -34,6 +34,7 @@ seed=1
 xopen("geo9068802.hoc")             // geometry file
 xopen("fixnseg.hoc")
 
+objref somatic, trunk_sec_list, oblique_dendrites
 somatic = new SectionList()
 	for i = 0,1 soma[i] somatic.append()
 trunk_sec_list = new SectionList()
