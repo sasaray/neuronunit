@@ -185,7 +185,7 @@ class Model(sciunit.Model,
             #print seg_list_dist
 
             if len(seg_list_prox) > 1:
-                s = int(round(len(seg_list_prox)/2.0)-1)
+                s = int(round(len(seg_list_prox)/2.0))
                 dend_loc_prox.append(sec.name())
                 dend_loc_prox.append(seg_list_prox[s])
             else:
