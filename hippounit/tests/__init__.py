@@ -842,11 +842,11 @@ class ObliqueIntegrationTest(Test):
 
 	        threshold_index0=numpy.where(diff_max_dV_dt==numpy.amax(diff_max_dV_dt[1:]))[0]
 	        threshold_index0=numpy.add(threshold_index0,1)
-			threshold_index0=threshold_index0[0]
+	        threshold_index0=threshold_index0[0]
 	        if sep_results[i][threshold_index0][3] > 1 and sep_results[i][threshold_index0-1][3]==1:    #double spikes can cause bigger jump in dV?dt than the first single spike, to find the threshol, we want to eliminate this, but we also need the previous input level to generate spike
 	            threshold_index=numpy.where(diff_max_dV_dt==numpy.amax(diff_max_dV_dt[1:threshold_index0-1]))
 	            threshold_index=numpy.add(threshold_index,1)
-				threshold_index=threshold_index[0]
+	            threshold_index=threshold_index[0]
 	        else:
 	            threshold_index=threshold_index0
 
