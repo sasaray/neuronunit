@@ -34,6 +34,8 @@ class Model(sciunit.Model,
         self.ObliqueSecList_name = None
         self.TrunkSecList_name = None
         self.dend_loc = []  #self.dend_loc = [['dendrite[80]',0.27],['dendrite[80]',0.83],['dendrite[54]',0.16],['dendrite[54]',0.95],['dendrite[52]',0.38],['dendrite[52]',0.83],['dendrite[53]',0.17],['dendrite[53]',0.7],['dendrite[28]',0.35],['dendrite[28]',0.78]]
+        self.NMDA_name = 'NMDA_JS'
+        self.AMPA_NMDA_ratio = 0.4
 
         self.AMPA_tau1 = 0.1
         self.AMPA_tau2 = 2
@@ -218,7 +220,7 @@ class Model(sciunit.Model,
         self.ampa.tau1 = self.AMPA_tau1
         self.ampa.tau2 = self.AMPA_tau2
 
-        self.nmda = h.NMDA_JS(xloc, sec=self.dendrite)
+        exec("self.nmda = h."+self.NMDA_name+"(xloc, sec=self.dendrite)")
 
         self.ndend = ndend
         self.xloc = xloc
@@ -241,7 +243,7 @@ class Model(sciunit.Model,
 
         self.ns.number = number
         self.ampa_nc.weight[0] = AMPA_weight
-        self.nmda_nc.weight[0] =AMPA_weight/0.4
+        self.nmda_nc.weight[0] =AMPA_weight/self.AMPA_NMDA_ratio
 
     def run_syn(self):
         """Used in ObliqueIntegrationTest"""

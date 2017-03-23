@@ -43,8 +43,8 @@ UNITS {
 }
 
 PARAMETER {
-	tau1=.1 (ms) <1e-9,1e9>
-	tau2 = 10 (ms) <1e-9,1e9>
+	tau1=2 (ms) <1e-9,1e9>
+	tau2 = 75 (ms) <1e-9,1e9>
 	e=0	(mV)
 	mg=1    (mM)		: 1 - external magnesium concentration
 	pf = 0.03  (1)      : 0.03 adjusted to give 15% ica at -60 mV

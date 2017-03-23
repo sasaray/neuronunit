@@ -34,6 +34,13 @@ seed=1
 xopen("geo9068802.hoc")             // geometry file
 xopen("fixnseg.hoc")
 
+somatic = new SectionList()
+	for i = 0,1 soma[i] somatic.append()
+trunk_sec_list = new SectionList()
+	for i = 0,10 user5[i] trunk_sec_list.append()
+oblique_dendrites = new SectionList()
+	for i = 14,30 apical_dendrite[i] oblique_dendrites.append()
+
 Rm = 28000
 RmDend = Rm/1
 RmSoma = Rm
