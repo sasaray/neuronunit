@@ -323,7 +323,7 @@ class DepolarizationBlockTest(Test):
 		    Ith=amps[Ith_index]
 		    Ith=Ith[0]
 		    Veq_index=Ith_index+1
-			Veq_index = int(Veq_index[0])
+		    Veq_index = int(Veq_index[0])
 
 		    plt.figure(1)
 		    plt.plot(results[Veq_index][0]['T'],results[Veq_index][0]['V'])
