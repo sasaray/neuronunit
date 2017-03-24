@@ -311,7 +311,7 @@ class DepolarizationBlockTest(Test):
 		if Ith_index.size > 1 or Ith_index == (spikecount_array.size) -1:     # If the max num AP is the last element, it didn`t enter depol. block
 		    Ith=float('NaN')                                 # If Ith == None, it means it didn`t enter depol block!!!
 		    Veq=float('NaN')
-		    Veq_index=Ith_index[0]
+		    Veq_index=Ith_index
 		    plt.figure(1)
 		    plt.plot(results[spikecount_array.size-1][0]['T'],results[spikecount_array.size-1][0]['V'])
 		    plt.title("somatic response to the highest current intensity\n (The model did not enter depol. block.)")
@@ -322,7 +322,7 @@ class DepolarizationBlockTest(Test):
 		else:
 		    Ith=amps[Ith_index]
 		    Ith=Ith[0]
-		    Veq_index=Ith_index+1
+		    Veq_index=Ith_index[0]+1
 		    plt.figure(1)
 		    plt.plot(results[Veq_index][0]['T'],results[Veq_index][0]['V'])
 		    plt.title("somatic response at Ith + 0.05 nA", fontsize=20)
