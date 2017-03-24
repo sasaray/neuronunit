@@ -322,7 +322,9 @@ class DepolarizationBlockTest(Test):
 		else:
 		    Ith=amps[Ith_index]
 		    Ith=Ith[0]
-		    Veq_index=Ith_index[0]+1
+		    Veq_index=Ith_index+1
+			Veq_index = int(Veq_index[0])
+
 		    plt.figure(1)
 		    plt.plot(results[Veq_index][0]['T'],results[Veq_index][0]['V'])
 		    plt.title("somatic response at Ith + 0.05 nA", fontsize=20)
@@ -360,10 +362,10 @@ class DepolarizationBlockTest(Test):
 
 		if Ith_index.size > 1:
 			Ith_index = int(Ith_index[-1])
-			Veq_index = int(Veq_index[-1])
+			#Veq_index = int(Veq_index[-1])
 		elif Ith_index.size == 1:
 			Ith_index = int(Ith_index[0])
-			Veq_index = int(Veq_index[0])
+			#Veq_index = int(Veq_index[0])
 
 		plt.figure(3)
 		plt.plot(results[Ith_index][0]['T'],results[Ith_index][0]['V'])
