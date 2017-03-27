@@ -314,7 +314,7 @@ class DepolarizationBlockTest(Test):
 		    Ith=float('NaN')                                 # If Ith == None, it means it didn`t enter depol block!!!
 		    Veq=float('NaN')
 		    Veq_index=Ith_index
-			Veq_index = int(Veq_index[0])
+		    Veq_index = int(Veq_index[0])
 		    plt.figure(1)
 		    plt.plot(results[spikecount_array.size-1][0]['T'],results[spikecount_array.size-1][0]['V'])
 		    plt.title("somatic response to the highest current intensity\n (The model did not enter depol. block.)")
