@@ -243,6 +243,8 @@ class DepolarizationBlockTest(Test):
 		self.directory_figs = base_directory + 'figs/'
 		self.npool = 4
 
+
+
 		description = "Tests if the model enters depolarization block under current injection of increasing amplitudes."
 
 	score_type = ZScore2
@@ -311,6 +313,7 @@ class DepolarizationBlockTest(Test):
 		if Ith_index.size > 1 or Ith_index == (spikecount_array.size) -1:     # If the max num AP is the last element, it didn`t enter depol. block
 		    Ith=float('NaN')                                 # If Ith == None, it means it didn`t enter depol block!!!
 		    Veq=float('NaN')
+			Ith_index = int(Ith_index[0])
 		    Veq_index=Ith_index
 		    plt.figure(1)
 		    plt.plot(results[spikecount_array.size-1][0]['T'],results[spikecount_array.size-1][0]['V'])
