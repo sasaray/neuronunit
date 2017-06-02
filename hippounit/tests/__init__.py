@@ -573,10 +573,10 @@ class ObliqueIntegrationTest(Test):
 	    traces_dend = [trace_dend]
 
 	    efel.setThreshold(threshold)
-	    traces_results_dend = efel.getFeatureValues(traces_dend,['Spikecount'])
-	    traces_results = efel.getFeatureValues(traces,['Spikecount'])
-	    spikecount_dend=traces_results_dend[0]['Spikecount']
-	    spikecount=traces_results[0]['Spikecount']
+	    traces_results_dend = efel.getFeatureValues(traces_dend,['Spikecount_stimint'])
+	    traces_results = efel.getFeatureValues(traces,['Spikecount_stimint'])
+	    spikecount_dend=traces_results_dend[0]['Spikecount_stimint']
+	    spikecount=traces_results[0]['Spikecount_stimint']
 
 	    result = [traces, traces_dend, spikecount, spikecount_dend]
 
@@ -594,9 +594,9 @@ class ObliqueIntegrationTest(Test):
 	        os.makedirs(path)
 
 	    if interval>0.1:
-	        file_name = path + 'synapse_' + str(num)+ '_' + str(ndend)+ '_' + str(xloc) + '.p'
-	    else:
 	        file_name = path + 'synapse_async_' + str(num)+ '_' + str(ndend)+ '_' + str(xloc) + '.p'
+	    else:
+	        file_name = path + 'synapse_' + str(num)+ '_' + str(ndend)+ '_' + str(xloc) + '.p'
 
 	    if self.force_run_synapse or (os.path.isfile(file_name) is False):
 

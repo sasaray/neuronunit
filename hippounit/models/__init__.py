@@ -5,6 +5,8 @@ from neuronunit.capabilities import ReceivesCurrent,ProducesMembranePotential
 from quantities import ms,mV,Hz
 from neuron import h
 
+import multiprocessing
+
 class Model(sciunit.Model,
                  ReceivesCurrent,
                  ProducesMembranePotential):
@@ -64,7 +66,9 @@ class Model(sciunit.Model,
         h.nrn_load_dll(self.modelpath + self.libpath)
 
     def initialise(self):
-        # load cell
+
+        #self.load_mod_files()
+
         h.load_file("stdrun.hoc")
         h.load_file(self.hocpath)
 
@@ -132,6 +136,8 @@ class Model(sciunit.Model,
 
     def find_good_obliques(self):
         """Used in ObliqueIntegrationTest"""
+
+        #self.initialise()
 
         good_obliques = h.SectionList()
         self.dend_loc=[]
@@ -208,6 +214,17 @@ class Model(sciunit.Model,
             self.dend_loc.append(dend_loc_dist)
 
         print 'Dendrites and locations to be tested: ', self.dend_loc
+        #return dend_loc
+    '''
+    def find_good_obliques(self):
+
+        pool = multiprocessing.Pool(1, maxtasksperchild = 1)
+
+        self.dend_loc = pool.apply(self.find_appropriate_obliques)
+        pool.terminate()
+        pool.join()
+        del pool
+    '''
 
     def set_ampa_nmda(self, dend_loc0=[80,0.27]):
         """Used in ObliqueIntegrationTest"""
