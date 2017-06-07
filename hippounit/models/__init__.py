@@ -285,7 +285,7 @@ class Model(sciunit.Model,
         dt = 0.025
         h.dt = dt
         h.steps_per_ms = 1 / dt
-        h.v_init = -65
+        #h.v_init = -65
 
         h.celsius = 34
         h.init()
