@@ -222,7 +222,7 @@ class Model(sciunit.Model,
 
         pool_obl = multiprocessing.Pool(1, maxtasksperchild = 1)
 
-        self.dend_loc = pool_obl.apply(self.find_appropriate_obliques, chunksize = 1)
+        self.dend_loc = pool_obl.apply(self.find_appropriate_obliques)
         pool_obl.terminate()
         pool_obl.join()
         del pool_obl
