@@ -13,7 +13,7 @@ except:
 
 import matplotlib.pyplot as plt
 import matplotlib
-from neuron import h
+#from neuron import h
 import collections
 import efel
 import os
@@ -264,10 +264,12 @@ class DepolarizationBlockTest(Test):
 			trace = {}
 			traces=[]
 
+			# load cell
+			#model.load_mod_files()
+			model.initialise()
 			print "- running amplitude: " + str(amp)  + " on model: " + model.name + " at: " + str(model.soma) + "(" + str(0.5) + ")"
 
-			# load cell
-			#model.initialise()
+
 			model.set_cclamp(amp)
 			t, v = model.run_cclamp()
 
@@ -494,13 +496,17 @@ class DepolarizationBlockTest(Test):
 	def generate_prediction(self, model, verbose=False):
 		"""Implementation of sciunit.Test.generate_prediction."""
 
-		pool = multiprocessing.Pool(self.npool)
+		pool = multiprocessing.Pool(self.npool, maxtasksperchild=1)
 		#amps = numpy.arange(0,3.55,0.05)
 		amps = numpy.arange(0,1.65,0.05)
 
 		cclamp_ = functools.partial(self.cclamp, model)
-		result = pool.map_async(cclamp_, amps)
-		results = result.get()
+		results = pool.map(cclamp_, amps, chunksize=1)
+		#results = result.get()
+
+		pool.terminate()
+		pool.join()
+		del pool
 
 
 		Ith, Veq = self.find_Ith_Veq(model, results, amps)
@@ -556,20 +562,20 @@ class ObliqueIntegrationTest(Test):
 	score_type = P_Value
 
 
-	def analyse_syn_traces(self, t, v, v_dend, threshold):
+	def analyse_syn_traces(self, model, t, v, v_dend, threshold):
 
 	    trace = {}
 	    trace['T'] = t
 	    trace['V'] = v
-	    trace['stim_start'] = [150]
-	    trace['stim_end'] = [150+500]  # should be changed
+	    trace['stim_start'] = [model.start]
+	    trace['stim_end'] = [model.start+500]  # should be changed
 	    traces = [trace]
 
 	    trace_dend = {}
 	    trace_dend['T'] = t
 	    trace_dend['V'] = v_dend
-	    trace_dend['stim_start'] = [150]
-	    trace_dend['stim_end'] = [150+500]
+	    trace_dend['stim_start'] = [model.start]
+	    trace_dend['stim_end'] = [model.start+500]
 	    traces_dend = [trace_dend]
 
 	    efel.setThreshold(threshold)
@@ -602,14 +608,16 @@ class ObliqueIntegrationTest(Test):
 
 	        print "- number of inputs:", num, "dendrite:", ndend, "xloc", xloc
 
-	        #model.initialise()
+	        #model.load_mod_files()
+	        model.initialise()
 	        model.set_ampa_nmda([ndend,xloc])
 	        model.set_netstim_netcon(interval)
 	        model.set_num_weight(num, weight)
 
 	        t, v, v_dend = model.run_syn()
 
-	        result = self.analyse_syn_traces(t, v, v_dend, model.threshold)
+	        result = self.analyse_syn_traces(model, t, v, v_dend, model.threshold)
+
 
 	        pickle.dump(result, gzip.GzipFile(file_name, "wb"))
 
@@ -637,11 +645,13 @@ class ObliqueIntegrationTest(Test):
 	        c_step_stop= model.c_step_stop
 	        #c_stim=numpy.arange()
 
-	        #model.initialise()
+	        model.initialise()
 	        model.set_ampa_nmda(dend_loc0)
 	        model.set_netstim_netcon(interval)
 
 	        found = False
+
+
 	        while c_step_start >= c_step_stop and not found:
 
 	            c_stim = numpy.arange(c_minmax[0], c_minmax[1], c_step_start)
@@ -662,7 +672,7 @@ class ObliqueIntegrationTest(Test):
 
 	                    t, v, v_dend = model.run_syn()
 
-	                    result.append(self.analyse_syn_traces(t, v, v_dend, model.threshold))
+	                    result.append(self.analyse_syn_traces(model, t, v, v_dend, model.threshold))
 	                    #print result
 
 	                if result[0][3]==0 and result[1][3]>=1:
@@ -677,9 +687,16 @@ class ObliqueIntegrationTest(Test):
 	            c_step_start=c_step_start/2
 
 	            if found:
-	                if result[1][2]>=1 :
+	                if result[1][2]>=1 :			# somatic AP is generated
 	                    found = None
 	                    break
+
+	        if not found:
+				if result[0][3]>=1 and result[1][3]>=1:
+					found = 'always spike'
+				if result[0][3]==0 and result[1][3]==0:
+					found = 'no spike'
+
 
 	        binsearch_result=[found, c_stim[midpoint]]
 
@@ -1788,15 +1805,19 @@ class ObliqueIntegrationTest(Test):
 		model_name_oblique = model.name
 
 
-		pool0 = multiprocessing.Pool(self.npool)
+		pool0 = multiprocessing.Pool(self.npool, maxtasksperchild=1)
 
 		print "Adjusting synaptic weights on all the locations ..."
 
 		binsearch_ = functools.partial(self.binsearch, model)
-		result0 = pool0.map_async(binsearch_, model.dend_loc)
-		results0 = result0.get()
+		results0 = pool0.map(binsearch_, model.dend_loc, chunksize=1)
+		#results0 = result0.get()
 
-		pool = multiprocessing.Pool(self.npool)
+		pool0.terminate()
+		pool0.join()
+		del pool0
+
+
 		max_num_syn=10
 
 		num = numpy.arange(0,max_num_syn+1)
@@ -1805,14 +1826,16 @@ class ObliqueIntegrationTest(Test):
 		dend0=[]
 		dend_loc00=[]
 		for i in range(0, len(model.dend_loc)):
-		    if results0[i][0]==None or results0[i][0]==False :
+		    if results0[i][0]==None or results0[i][0]=='no spike' or results0[i][0]=='always spike':
+		        print results0[i][0]
 		        if model.dend_loc[i][0] not in dend0:
 		            dend0.append(model.dend_loc[i][0])
 		    if results0[i][0]==None :
-		        print 'the dendritic spike on at least one of the locations of dendrite ',  model.dend_loc[i][0], 'generated somatic AP'
-		    if results0[i][0]==False :
+		        print 'The dendritic spike on at least one of the locations of dendrite ',  model.dend_loc[i][0], 'generated somatic AP'
+		    if results0[i][0]=='no spike' :
 		        print 'No dendritic spike could be generated on at least one of the locations of dendrite',  model.dend_loc[i][0]
-
+		    if results0[i][0]=='always spike' :
+		        print 'At least one of the locations of dendrite',  model.dend_loc[i][0], 'generates dendritic spike even to smaller number of inputs'
 		for k in range(0, len(dend0)):
 		    for i in range(0, len(model.dend_loc)):
 		        if model.dend_loc[i][0]==dend0[k]:
@@ -1835,18 +1858,28 @@ class ObliqueIntegrationTest(Test):
 
 			interval_sync=0.1
 
+			pool = multiprocessing.Pool(self.npool, maxtasksperchild=1)
 			run_synapse_ = functools.partial(self.run_synapse, model, interval=interval_sync)
-			result = pool.map_async(run_synapse_,dend_loc_num_weight)
-			results = result.get()
+			results = pool.map(run_synapse_, dend_loc_num_weight, chunksize=1)
+			#results = result.get()
 
 
-			pool1 = multiprocessing.Pool(self.npool)
+			pool.terminate()
+			pool.join()
+			del pool
+
+
+			pool1 = multiprocessing.Pool(self.npool, maxtasksperchild=1)
 
 			interval_async=2
 
 			run_synapse_ = functools.partial(self.run_synapse, model, interval=interval_async)
-			result_async = pool1.map_async(run_synapse_,dend_loc_num_weight)
-			results_async = result_async.get()
+			results_async = pool1.map(run_synapse_,dend_loc_num_weight, chunksize=1)
+			#results_async = result_async.get()
+
+			pool1.terminate()
+			pool1.join()
+			del pool1
 
 			model_means, model_SDs, model_N = self.calcs_plots(model, results, dend_loc000, dend_loc_num_weight)
 
@@ -2021,7 +2054,7 @@ class SomaticFeaturesTest(Test):
 
 		    if self.force_run or (os.path.isfile(file_name) is False):
 
-		        #model.initialise()
+		        model.initialise()
 		        stim_section_name = model.translate(stim_section_name, distance=0)
 		        rec_section_name = model.translate(rec_section_name, distance=0)
 		        print "running stimulus: " + stimulus_name + " on model: " + model.name + " at: " + str(stim_section_name)+"("+str(stim_location_x)+")"
@@ -2140,19 +2173,30 @@ class SomaticFeaturesTest(Test):
 		global model_name_soma
 		model_name_soma = model.name
 
-		pool = multiprocessing.Pool(self.npool)
+		pool = multiprocessing.Pool(self.npool, maxtasksperchild=1)
 
 		stimuli_list=self.create_stimuli_list()
 
 		run_stim_ = functools.partial(self.run_stim, model)
-		traces_result = pool.map_async(run_stim_, stimuli_list)
-		traces_results = traces_result.get()
+		traces_results = pool.map(run_stim_, stimuli_list, chunksize=1)
+		#traces_results = traces_result.get()
+
+		pool.terminate()
+		pool.join()
+		del pool
+
+		pool2 = multiprocessing.Pool(self.npool, maxtasksperchild=1)
 
 		features_names, features_list = self.create_features_list(self.observation)
 
 		analyse_traces_ = functools.partial(self.analyse_traces, stimuli_list, traces_results)
-		feature_result = pool.map_async(analyse_traces_, features_list)
-		feature_results = feature_result.get()
+		feature_results = pool2.map(analyse_traces_, features_list, chunksize=1)
+		#feature_results = feature_result.get()
+
+		pool2.terminate()
+		pool2.join()
+		del pool2
+
 
 		feature_results_dict={}
 		for i in range (0,len(feature_results)):

@@ -22,6 +22,7 @@ class Model(sciunit.Model,
         self.template_name = None
         self.SomaSecList_name = None
         self.max_dist_from_soma = None
+        self.v_init = -65
 
         self.name = name
         self.threshold = -20
@@ -67,7 +68,7 @@ class Model(sciunit.Model,
 
     def initialise(self):
 
-        #self.load_mod_files()
+        self.load_mod_files()
 
         h.load_file("stdrun.hoc")
         h.load_file(self.hocpath)
@@ -122,7 +123,7 @@ class Model(sciunit.Model,
         dt = 0.025
         h.dt = dt
         h.steps_per_ms = 1 / dt
-        h.v_init = -65
+        h.v_init = self.v_init#-65
 
         h.celsius = 34
         h.init()
@@ -134,10 +135,11 @@ class Model(sciunit.Model,
 
         return t, v
 
-    def find_good_obliques(self):
+    def find_appropriate_obliques(self):
         """Used in ObliqueIntegrationTest"""
 
-        #self.initialise()
+        #self.load_mod_files()
+        self.initialise()
 
         good_obliques = h.SectionList()
         self.dend_loc=[]
@@ -210,21 +212,20 @@ class Model(sciunit.Model,
                 dend_loc_dist.append(0.9)
 
 
-            self.dend_loc.append(dend_loc_prox)
-            self.dend_loc.append(dend_loc_dist)
+            dend_loc.append(dend_loc_prox)
+            dend_loc.append(dend_loc_dist)
 
-        print 'Dendrites and locations to be tested: ', self.dend_loc
-        #return dend_loc
-    '''
+        print 'Dendrites and locations to be tested: ', dend_loc
+        return dend_loc
+
     def find_good_obliques(self):
 
-        pool = multiprocessing.Pool(1, maxtasksperchild = 1)
+        pool_obl = multiprocessing.Pool(1, maxtasksperchild = 1)
 
-        self.dend_loc = pool.apply(self.find_appropriate_obliques)
-        pool.terminate()
-        pool.join()
-        del pool
-    '''
+        self.dend_loc = pool_obl.apply(self.find_appropriate_obliques, chunksize = 1)
+        pool_obl.terminate()
+        pool_obl.join()
+        del pool_obl
 
     def set_ampa_nmda(self, dend_loc0=[80,0.27]):
         """Used in ObliqueIntegrationTest"""
@@ -285,7 +286,7 @@ class Model(sciunit.Model,
         dt = 0.025
         h.dt = dt
         h.steps_per_ms = 1 / dt
-        h.v_init = -80
+        h.v_init = self.v_init #-80
 
         h.celsius = 34
         h.init()
@@ -327,7 +328,7 @@ class Model(sciunit.Model,
         dt = 0.025
         h.dt = dt
         h.steps_per_ms = 1 / dt
-        h.v_init = -65
+        h.v_init = self.v_init #-65
 
         h.celsius = 34
         h.init()
