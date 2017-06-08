@@ -142,7 +142,7 @@ class Model(sciunit.Model,
         self.initialise()
 
         good_obliques = h.SectionList()
-        self.dend_loc=[]
+        dend_loc=[]
 
         if self.template_name is not None:
 
