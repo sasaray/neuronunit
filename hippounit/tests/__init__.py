@@ -1,8 +1,7 @@
 from quantities.quantity import Quantity
 import sciunit
 from sciunit import Test,Score,ObservationError
-from neuronunit.capabilities import ProducesMembranePotential
-from neuronunit.capabilities import ReceivesCurrent
+import hippounit.capabilities as cap
 from sciunit.utils import assert_dimensionless# Converters.
 from sciunit.scores import BooleanScore,ZScore # Scores.
 
@@ -234,8 +233,7 @@ class DepolarizationBlockTest(Test):
 
 		Test.__init__(self,observation,name)
 
-		self.required_capabilities += (ProducesMembranePotential,
-							  		   ReceivesCurrent,)
+		self.required_capabilities += (cap.ReceivesSquareCurrent,)
 
 		self.force_run = force_run
 		self.directory = base_directory + 'temp_data/'
@@ -250,7 +248,7 @@ class DepolarizationBlockTest(Test):
 	score_type = ZScore2
 
 
-	def cclamp(self, model, amp):
+	def cclamp(self, model, amp, delay, dur):
 
 		path = self.directory + model.name + '/depol_block/'
 
@@ -264,19 +262,19 @@ class DepolarizationBlockTest(Test):
 			trace = {}
 			traces=[]
 
-			# load cell
-			#model.load_mod_files()
-			model.initialise()
-			print "- running amplitude: " + str(amp)  + " on model: " + model.name + " at: " + str(model.soma) + "(" + str(0.5) + ")"
+			t, v = model.get_vm(amp, delay, dur, 'soma', 0.5, 'soma', 0.5)
+
+			#print "- running amplitude: " + str(amp)  + " on model: " + model.name + " at: " + str(model.soma) + "(" + str(0.5) + ")"
 
 
-			model.set_cclamp(amp)
-			t, v = model.run_cclamp()
+			#t, v = model.run_cclamp()
+
+
 
 			trace['T'] = t
 			trace['V'] = v
-			trace['stim_start'] = [500]
-			trace['stim_end'] = [500+1000]
+			trace['stim_start'] = [delay]
+			trace['stim_end'] = [delay + dur]
 			traces.append(trace)
 
 			traces_results = efel.getFeatureValues(traces,
@@ -500,7 +498,7 @@ class DepolarizationBlockTest(Test):
 		#amps = numpy.arange(0,3.55,0.05)
 		amps = numpy.arange(0,1.65,0.05)
 
-		cclamp_ = functools.partial(self.cclamp, model)
+		cclamp_ = functools.partial(self.cclamp, model, delay = 500, dur = 1000)
 		results = pool.map(cclamp_, amps, chunksize=1)
 		#results = result.get()
 
@@ -545,8 +543,7 @@ class ObliqueIntegrationTest(Test):
 
 		Test.__init__(self, observation, name)
 
-		self.required_capabilities += (ProducesMembranePotential,
-							  		   ReceivesCurrent,)
+		self.required_capabilities = (cap.ProvidesGoodObliques, cap.ReceivesSynapse,) # +=
 
 		self.force_run_synapse = force_run_synapse
 		self.force_run_bin_search = force_run_bin_search
@@ -608,13 +605,8 @@ class ObliqueIntegrationTest(Test):
 
 	        print "- number of inputs:", num, "dendrite:", ndend, "xloc", xloc
 
-	        #model.load_mod_files()
-	        model.initialise()
-	        model.set_ampa_nmda([ndend,xloc])
-	        model.set_netstim_netcon(interval)
-	        model.set_num_weight(num, weight)
 
-	        t, v, v_dend = model.run_syn()
+	        t, v, v_dend = model.run_synapse_get_vm([ndend,xloc], interval, num, weight)
 
 	        result = self.analyse_syn_traces(model, t, v, v_dend, model.threshold)
 
@@ -625,6 +617,21 @@ class ObliqueIntegrationTest(Test):
 	        result = pickle.load(gzip.GzipFile(file_name, "rb"))
 
 	    return result
+
+
+	def syn_binsearch(self, model, dend_loc, interval, number, weight):
+
+	    print 'dend_loc: ', dend_loc, ' interval: ', interval, ' number: ', number, ' weight: ', weight
+	    '''
+	    model.initialise()
+	    model.set_ampa_nmda(dend_loc)
+	    model.set_netstim_netcon(interval)
+	    model.set_num_weight(number, weight)
+	    '''
+
+	    t, v, v_dend = model.run_synapse_get_vm(dend_loc, interval, number, weight)
+
+	    return t, v, v_dend
 
 	def binsearch(self, model, dend_loc0):
 
@@ -645,9 +652,6 @@ class ObliqueIntegrationTest(Test):
 	        c_step_stop= model.c_step_stop
 	        #c_stim=numpy.arange()
 
-	        model.initialise()
-	        model.set_ampa_nmda(dend_loc0)
-	        model.set_netstim_netcon(interval)
 
 	        found = False
 
@@ -671,6 +675,14 @@ class ObliqueIntegrationTest(Test):
 	                    model.set_num_weight(n, c_stim[midpoint])
 
 	                    t, v, v_dend = model.run_syn()
+	                    '''
+
+	                    pool_syn = multiprocessing.Pool(1, maxtasksperchild = 1)	# I use multiprocessing to keep every NEURON related task in independent processes
+
+	                    t, v, v_dend = pool_syn.apply(self.syn_binsearch, args = (model, dend_loc0, interval, n, c_stim[midpoint]))
+	                    pool_syn.terminate()
+	                    pool_syn.join()
+	                    del pool_syn
 
 	                    result.append(self.analyse_syn_traces(model, t, v, v_dend, model.threshold))
 	                    #print result
@@ -1799,13 +1811,16 @@ class ObliqueIntegrationTest(Test):
 	def generate_prediction(self, model, verbose=False):
 		"""Implementation of sciunit.Test.generate_prediction."""
 
+		model.find_obliques_multiproc()
+
 		traces = []
 
 		global model_name_oblique
 		model_name_oblique = model.name
 
 
-		pool0 = multiprocessing.Pool(self.npool, maxtasksperchild=1)
+		pool0 = multiprocessing.pool.ThreadPool(self.npool)    # multiprocessing.pool.ThreadPool is used because a nested multiprocessing is used in the function called here (to keep every NEURON related task in independent processes)
+		#pool0 = multiprocessing.Pool(self.npool, maxtasksperchild = 1)
 
 		print "Adjusting synaptic weights on all the locations ..."
 
@@ -1827,7 +1842,7 @@ class ObliqueIntegrationTest(Test):
 		dend_loc00=[]
 		for i in range(0, len(model.dend_loc)):
 		    if results0[i][0]==None or results0[i][0]=='no spike' or results0[i][0]=='always spike':
-		        print results0[i][0]
+		        #print results0[i][0]
 		        if model.dend_loc[i][0] not in dend0:
 		            dend0.append(model.dend_loc[i][0])
 		    if results0[i][0]==None :
@@ -1977,8 +1992,7 @@ class SomaticFeaturesTest(Test):
 
 		Test.__init__(self,observation,name)
 
-		self.required_capabilities += (ProducesMembranePotential,
-							  		   ReceivesCurrent,)
+		self.required_capabilities += (cap.ReceivesSquareCurrent,)
 
 		self.force_run = force_run
 
@@ -2054,13 +2068,8 @@ class SomaticFeaturesTest(Test):
 
 		    if self.force_run or (os.path.isfile(file_name) is False):
 
-		        model.initialise()
-		        stim_section_name = model.translate(stim_section_name, distance=0)
-		        rec_section_name = model.translate(rec_section_name, distance=0)
-		        print "running stimulus: " + stimulus_name + " on model: " + model.name + " at: " + str(stim_section_name)+"("+str(stim_location_x)+")"
-
-		        model.set_cclamp_somatic_feature(float(amplitude), float(delay), float(duration), stim_section_name, stim_location_x)
-		        t,v = model.run_cclamp_somatic_feature(rec_section_name, rec_location_x)
+		       
+		        t, v = model.get_vm(float(amplitude), float(delay), float(duration), stim_section_name, stim_location_x, rec_section_name, rec_location_x)
 
 		        traces_result[stimulus_name]=[t,v]
 

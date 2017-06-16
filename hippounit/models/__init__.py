@@ -1,15 +1,17 @@
 import os
 import numpy
 import sciunit
-from neuronunit.capabilities import ReceivesCurrent,ProducesMembranePotential
+from neuronunit.capabilities import ReceivesCurrent, ProducesMembranePotential
+import hippounit.capabilities as cap
 from quantities import ms,mV,Hz
 from neuron import h
 
 import multiprocessing
 
 class Model(sciunit.Model,
-                 ReceivesCurrent,
-                 ProducesMembranePotential):
+                 cap.ProvidesGoodObliques,
+                 cap.ReceivesSquareCurrent,
+                 cap.ReceivesSynapse):
 
     def __init__(self, name="model"):
         """ Constructor. """
@@ -22,7 +24,7 @@ class Model(sciunit.Model,
         self.template_name = None
         self.SomaSecList_name = None
         self.max_dist_from_soma = None
-        self.v_init = -65
+        self.v_init = None
 
         self.name = name
         self.threshold = -20
@@ -94,29 +96,33 @@ class Model(sciunit.Model,
                 self.soma = h.secname()
         # if both is None, the model is loaded, self.soma will be used
 
-    def set_cclamp(self, amp):
-        """Used in DepolarizationBlockTest"""
+    def inject_current(self, amp, delay, dur, section_stim, loc_stim, section_rec, loc_rec):
 
-        exec("self.sect_loc=h." + str(self.soma)+"("+str(0.5)+")")
+        self.initialise()
 
-        self.stim = h.IClamp(self.sect_loc)
+        stim_section_name = self.translate(section_stim, distance=0)
+        rec_section_name = self.translate(section_rec, distance=0)
+        #exec("self.sect_loc=h." + str(self.soma)+"("+str(0.5)+")")
+
+        exec("self.sect_loc_stim=h." + str(stim_section_name)+"("+str(loc_stim)+")")
+
+        print "- running amplitude: " + str(amp)  + " on model: " + self.name + " at: " + stim_section_name + "(" + str(loc_stim) + ")"
+
+        self.stim = h.IClamp(self.sect_loc_stim)
 
         self.stim.amp = amp
-        self.stim.delay = 500
-        self.stim.dur = 1000
-
-    def run_cclamp(self):
-        """Used in DepolarizationBlockTest"""
+        self.stim.delay = delay
+        self.stim.dur = dur
 
         #print "- running model", self.name, "stimulus at: ", str(self.soma), "(", str(0.5), ")"
 
-        exec("self.sect_loc=h." + str(self.soma)+"("+str(0.5)+")")
+        exec("self.sect_loc_rec=h." + str(rec_section_name)+"("+str(loc_rec)+")")
 
         rec_t = h.Vector()
         rec_t.record(h._ref_t)
 
         rec_v = h.Vector()
-        rec_v.record(self.sect_loc._ref_v)
+        rec_v.record(self.sect_loc_rec._ref_v)
 
         h.stdinit()
 
@@ -127,7 +133,7 @@ class Model(sciunit.Model,
 
         h.celsius = 34
         h.init()
-        h.tstop = 1600
+        h.tstop = delay + dur + 200
         h.run()
 
         t = numpy.array(rec_t)
@@ -135,10 +141,12 @@ class Model(sciunit.Model,
 
         return t, v
 
-    def find_appropriate_obliques(self):
+
+
+    def find_good_obliques(self):
         """Used in ObliqueIntegrationTest"""
 
-        #self.load_mod_files()
+
         self.initialise()
 
         good_obliques = h.SectionList()
@@ -218,19 +226,11 @@ class Model(sciunit.Model,
         print 'Dendrites and locations to be tested: ', dend_loc
         return dend_loc
 
-    def find_good_obliques(self):
 
-        pool_obl = multiprocessing.Pool(1, maxtasksperchild = 1)
-
-        self.dend_loc = pool_obl.apply(self.find_appropriate_obliques)
-        pool_obl.terminate()
-        pool_obl.join()
-        del pool_obl
-
-    def set_ampa_nmda(self, dend_loc0=[80,0.27]):
+    def set_ampa_nmda(self, dend_loc):
         """Used in ObliqueIntegrationTest"""
 
-        ndend, xloc = dend_loc0
+        ndend, xloc = dend_loc
 
         exec("self.dendrite=h." + ndend)
 
@@ -256,15 +256,20 @@ class Model(sciunit.Model,
         self.nmda_nc = h.NetCon(self.ns, self.nmda, 0, 0, 0)
 
 
-    def set_num_weight(self, number=1, AMPA_weight=0.0004):
+    def set_num_weight(self, number, AMPA_weight):
         """Used in ObliqueIntegrationTest"""
 
         self.ns.number = number
         self.ampa_nc.weight[0] = AMPA_weight
         self.nmda_nc.weight[0] =AMPA_weight/self.AMPA_NMDA_ratio
 
-    def run_syn(self):
+    def run_syn(self, dend_loc, interval, number, AMPA_weight):
         """Used in ObliqueIntegrationTest"""
+
+        self.initialise()
+        self.set_ampa_nmda(dend_loc)
+        self.set_netstim_netcon(interval)
+        self.set_num_weight(number, AMPA_weight)
 
         exec("self.sect_loc=h." + str(self.soma)+"("+str(0.5)+")")
 
@@ -278,9 +283,7 @@ class Model(sciunit.Model,
         rec_v_dend = h.Vector()
         rec_v_dend.record(self.dendrite(self.xloc)._ref_v)
 
-        #print "- running model", self.name
-        # initialze and run
-        #h.load_file("stdrun.hoc")
+ 
         h.stdinit()
 
         dt = 0.025
@@ -300,47 +303,7 @@ class Model(sciunit.Model,
 
         return t, v, v_dend
 
-    def set_cclamp_somatic_feature(self, amp, delay, dur, section_stim, loc_stim):
-        """Used in SomaticFeaturesTest"""
-
-        exec("self.sect_loc=h." + str(section_stim)+"("+str(loc_stim)+")")
-
-
-        self.stim = h.IClamp(self.sect_loc)
-        self.stim.amp = amp
-        self.stim.delay = delay
-        self.stim.dur = dur
-
-    def run_cclamp_somatic_feature(self, section_rec, loc_rec):
-
-        """Used in SomaticFeaturesTest"""
-
-        #print "- running model", self.name, "stimulus at: ", str(section_rec)+"("+str(loc_rec)+")"
-
-        rec_t = h.Vector()
-        rec_t.record(h._ref_t)
-
-        rec_v = h.Vector()
-        rec_v.record(self.sect_loc._ref_v)
-
-        h.stdinit()
-
-        dt = 0.025
-        h.dt = dt
-        h.steps_per_ms = 1 / dt
-        h.v_init = self.v_init #-65
-
-        h.celsius = 34
-        h.init()
-        h.tstop = 1600
-        h.run()
-
-        t = numpy.array(rec_t)
-        v = numpy.array(rec_v)
-
-        return t, v
-
-
+    
 class KaliFreund(sciunit.Model,
                  ReceivesCurrent,
                  ProducesMembranePotential):

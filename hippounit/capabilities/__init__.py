@@ -7,70 +7,51 @@ import numpy as np
 
 import sciunit
 from sciunit import Capability
+import multiprocessing
 
-class ProducesMembranePotential(Capability):
-	"""Indicates that the model produces a somatic membrane potential."""
+class ReceivesSquareCurrent(sciunit.Capability):
+	"""Indicates that current can be injected into the model as
+    a square pulse. """
 
-	def get_membrane_potential(self):
-		"""Must return a neo.core.AnalogSignal."""
+	def inject_current(self, amp, delay, dur, section_stim, loc_stim, section_rec, loc_rec):
+		""" Must return numpy arrays containing the time and voltage values"""
 		raise NotImplementedError()
 
-	def get_median_vm(self):
-		vm = self.get_membrane_potential()
-		return np.median(vm)
+	def get_vm(self, amp, delay, dur, section_stim, loc_stim, section_rec, loc_rec):
 
-class ProducesSpikes(sciunit.Capability):
-	"""
-	Indicates that the model produces spikes.
-	No duration is required for these spikes.
-	"""
+		t, v = self.inject_current(amp, delay, dur, section_stim, loc_stim, section_rec, loc_rec)
+		return t, v
 
-	def get_spikes(self):
-		"""Gets computed spike times from the model.
+class ProvidesGoodObliques(sciunit.Capability):
+	""" Indicates that the model provides a list of oblique dendrites and locations to be tested"""
 
-		Arguments: None.
-		Returns: a neo.core.SpikeTrain object.
-		"""
-
-		raise NotImplementedError()
-
-
-class ProducesActionPotentials(ProducesSpikes):
-	"""Indicates the model produces action potential waveforms.
-	Waveforms must have a temporal extent.
-	"""
-
-	def get_action_potentials(self):
-		"""Gets action potential waveform chunks from the model.
-
-    	Returns
-    	-------
-    	Must return a neo.core.AnalogSignalArray.
-        Each neo.core.AnalogSignal in the array should be a spike waveform.
-		"""
+	def find_good_obliques(self):
+		""" Must provide a list of oblique dendrites
+		that meet the criteria of the experimental protocol (Losonczy, Magee 2006),
+		and also proximal and distal locations on them.
+		Criteria: originate from the trunk, have no child, close to the soma (at most 120 microns)
+		The form must be: dend_loc = [['name_of_dend1',prox_location],['name_of_dend1',dist_location],['name_of_dend2',prox_location] ['name_of_dend2',dist_location]]
+		E.g. : [['CCell[0].apic[47]', 0.5], ['CCell[0].apic[47]', 0.8333333333333333]] """
 
 		raise NotImplementedError()
 
-	def get_action_potential_widths(self):
-		action_potentials = self.get_action_potentials()
-		widths = [utils.ap_width(x) for x in action_potentials]
-		return widths
+	def find_obliques_multiproc(self):
+		""" Used to keep all NEURON related tasks in independent processes, to avoid errors like 'template can not be redefined'"""
+		pool_obl = multiprocessing.Pool(1, maxtasksperchild = 1)
+		self.dend_loc = pool_obl.apply(self.find_good_obliques)  # this way model.dend_loc gets the values
+		pool_obl.terminate()
+		pool_obl.join()
+		del pool_obl
 
-class ReceivesCurrent(Capability):
-	"""Indicates that somatic current can be injected into the model."""
+class ReceivesSynapse(sciunit.Capability):
+	"""Indicates that the model receives synapse"""
 
-	def inject_current(self,current):
-		"""Injects somatic current into the model.
-
-	    Parameters
-	    ----------
-	    current : neo.core.AnalogSignal
-	    This is a time series of the current to be injected.
-	    """
-
+	def run_syn(self, dend_loc, interval, number, AMPA_weight):
+		""" Must return numpy arrays containing the time and voltage values (at the soma and at the synaptic location )"""
 		raise NotImplementedError()
 
-class LEMS_Runnable(sciunit.Capability):
-    """Capability for models that can be run by executing LEMS files."""
-    def LEMS_run(self,**run_params):
-        return NotImplementedError("%s not implemented" % inspect.stack()[0][3])
+	def run_synapse_get_vm(self, dend_loc, interval, number, AMPA_weight):
+
+		t, v, v_dend = self.run_syn(dend_loc, interval, number, AMPA_weight)
+
+		return t, v, v_dend
