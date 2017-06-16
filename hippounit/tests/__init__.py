@@ -674,13 +674,6 @@ class ObliqueIntegrationTest(Test):
 	                for n in num:
 	                    
 
-
-<<<<<<< HEAD
-=======
-	                    t, v, v_dend = model.run_syn()
-	                    
->>>>>>> 12c157fb982e29d99c92cd63ae519c1530f626b5
-
 	                    pool_syn = multiprocessing.Pool(1, maxtasksperchild = 1)	# I use multiprocessing to keep every NEURON related task in independent processes
 
 	                    t, v, v_dend = pool_syn.apply(self.syn_binsearch, args = (model, dend_loc0, interval, n, c_stim[midpoint]))
