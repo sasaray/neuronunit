@@ -672,10 +672,9 @@ class ObliqueIntegrationTest(Test):
 	                result=[]
 
 	                for n in num:
-	                    model.set_num_weight(n, c_stim[midpoint])
+	                    
 
-	                    t, v, v_dend = model.run_syn()
-	                    '''
+
 
 	                    pool_syn = multiprocessing.Pool(1, maxtasksperchild = 1)	# I use multiprocessing to keep every NEURON related task in independent processes
 
@@ -2068,7 +2067,7 @@ class SomaticFeaturesTest(Test):
 
 		    if self.force_run or (os.path.isfile(file_name) is False):
 
-		       
+
 		        t, v = model.get_vm(float(amplitude), float(delay), float(duration), stim_section_name, stim_location_x, rec_section_name, rec_location_x)
 
 		        traces_result[stimulus_name]=[t,v]
