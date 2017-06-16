@@ -675,7 +675,7 @@ class ObliqueIntegrationTest(Test):
 	                    model.set_num_weight(n, c_stim[midpoint])
 
 	                    t, v, v_dend = model.run_syn()
-	                    '''
+	                    
 
 	                    pool_syn = multiprocessing.Pool(1, maxtasksperchild = 1)	# I use multiprocessing to keep every NEURON related task in independent processes
 
