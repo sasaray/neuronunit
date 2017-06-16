@@ -621,13 +621,6 @@ class ObliqueIntegrationTest(Test):
 
 	def syn_binsearch(self, model, dend_loc, interval, number, weight):
 
-	    print 'dend_loc: ', dend_loc, ' interval: ', interval, ' number: ', number, ' weight: ', weight
-	    '''
-	    model.initialise()
-	    model.set_ampa_nmda(dend_loc)
-	    model.set_netstim_netcon(interval)
-	    model.set_num_weight(number, weight)
-	    '''
 
 	    t, v, v_dend = model.run_synapse_get_vm(dend_loc, interval, number, weight)
 
@@ -672,7 +665,7 @@ class ObliqueIntegrationTest(Test):
 	                result=[]
 
 	                for n in num:
-	                    
+
 
 	                    pool_syn = multiprocessing.Pool(1, maxtasksperchild = 1)	# I use multiprocessing to keep every NEURON related task in independent processes
 
