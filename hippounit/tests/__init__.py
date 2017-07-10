@@ -17,6 +17,7 @@ import collections
 import efel
 import os
 import multiprocessing
+import multiprocessing.pool
 import functools
 import math
 from scipy import stats
@@ -220,6 +221,17 @@ def _unpickle_method(func_name, obj, cls):
             break
     return func.__get__(obj, cls)
 
+# https://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
+class NoDaemonProcess(multiprocessing.Process):
+    # make 'daemon' attribute always return False
+    def _get_daemon(self):
+        return False
+    def _set_daemon(self, value):
+        pass
+    daemon = property(_get_daemon, _set_daemon)
+
+class NoDeamonPool(multiprocessing.pool.Pool):
+    Process = NoDaemonProcess
 
 class DepolarizationBlockTest(Test):
 	"""Tests if the model enters depolarization block under current injection of increasing amplitudes."""
@@ -239,6 +251,11 @@ class DepolarizationBlockTest(Test):
 		self.directory = base_directory + 'temp_data/'
 		self.directory_results = base_directory + 'results/'
 		self.directory_figs = base_directory + 'figs/'
+
+		self.path_temp_data = None #added later, because model name is needed
+		self.path_figs = None
+		self.path_results = None
+
 		self.npool = 4
 
 
@@ -250,12 +267,13 @@ class DepolarizationBlockTest(Test):
 
 	def cclamp(self, model, amp, delay, dur):
 
-		path = self.directory + model.name + '/depol_block/'
+		#path = self.directory + model.name + '/depol_block/'
+		self.path_temp_data = self.directory + model.name + '/depol_block/'
 
-		if not os.path.exists(path):
-			os.makedirs(path)
+		if not os.path.exists(self.path_temp_data):
+			os.makedirs(self.path_temp_data)
 
-		file_name = path + 'cclamp_' + str(amp) + '.p'
+		file_name = self.path_temp_data + 'cclamp_' + str(amp) + '.p'
 
 		if self.force_run or (os.path.isfile(file_name) is False):
 
@@ -291,12 +309,13 @@ class DepolarizationBlockTest(Test):
 	def find_Ith_Veq(self, model, results, amps):
 
 
-		path_figs = self.directory_figs + 'depol_block/' + model.name + '/'
+		#path_figs = self.directory_figs + 'depol_block/' + model.name + '/'
+		self.path_figs = self.directory_figs + 'depol_block/' + model.name + '/'
 
-		if not os.path.exists(path_figs):
-			os.makedirs(path_figs)
+		if not os.path.exists(self.path_figs):
+			os.makedirs(self.path_figs)
 
-		print "The figures are saved in the directory: ", path_figs
+		print "The figures are saved in the directory: ", self.path_figs
 
 		spikecount_array=numpy.array([])
 
@@ -319,7 +338,7 @@ class DepolarizationBlockTest(Test):
 		    plt.plot(results[spikecount_array.size-1][0]['T'],results[spikecount_array.size-1][0]['V'])
 		    plt.title("somatic response to the highest current intensity\n (The model did not enter depol. block.)")
 		    print " the model did not enter depolarization block"
-		    plt.savefig(path_figs + 'somatic_resp_at_depol_block' + '.pdf', dpi=300)
+		    plt.savefig(self.path_figs + 'somatic_resp_at_depol_block' + '.pdf', dpi=300)
 
 
 		else:
@@ -334,7 +353,7 @@ class DepolarizationBlockTest(Test):
 		    plt.xlabel("time (ms)", fontsize=20)
 		    plt.ylabel("Somatic voltage (mV)", fontsize=20)
 		    plt.tick_params(labelsize=18)
-		    plt.savefig(path_figs + 'somatic_resp_at_depol_block' + '.pdf', dpi=300)
+		    plt.savefig(self.path_figs + 'somatic_resp_at_depol_block' + '.pdf', dpi=300)
 
 		    Veq_trace=results[Veq_index][0]['V']
 		    time=numpy.array(results[Veq_index][0]['T'])
@@ -360,8 +379,8 @@ class DepolarizationBlockTest(Test):
 		#plt.ylabel("number of APs")
 		plt.ylabel("num. of APs",fontsize=20)
 		plt.margins(0.01)
-		plt.savefig(path_figs + 'number_of_APs' + '.pdf', dpi=600)
-		#plt.savefig(path_figs + 'num. of Aps' + '.pdf')
+		plt.savefig(self.path_figs + 'number_of_APs' + '.pdf', dpi=600)
+		#plt.savefig(self.path_figs + 'num. of Aps' + '.pdf')
 
 		if Ith_index.size > 1:
 			Ith_index = int(Ith_index[-1])
@@ -376,7 +395,7 @@ class DepolarizationBlockTest(Test):
 		plt.xlabel("time (ms)", fontsize=20)
 		plt.ylabel("Somatic voltage (mV)", fontsize=20)
 		plt.tick_params(labelsize=18)
-		plt.savefig(path_figs + 'somatic_resp_at_Ith' + '.pdf', dpi=600)
+		plt.savefig(self.path_figs + 'somatic_resp_at_Ith' + '.pdf', dpi=600)
 
 		x =numpy.array([1, 2])
 		Ith_array = numpy.array([self.observation['mean_Ith'], Ith])
@@ -393,7 +412,7 @@ class DepolarizationBlockTest(Test):
 		plt.xticks(x, labels, rotation=10)
 		plt.margins(0.2)
 		plt.ylabel("Ith (nA)")
-		plt.savefig(path_figs + 'Ith' + '.pdf', dpi=600)
+		plt.savefig(self.path_figs + 'Ith' + '.pdf', dpi=600)
 
 		x =numpy.array([1, 2])
 		Veq_array = numpy.array([self.observation['mean_Veq'], Veq])
@@ -410,7 +429,7 @@ class DepolarizationBlockTest(Test):
 		plt.xticks(x, labels, rotation=10)
 		plt.margins(0.2)
 		plt.ylabel("Veq (mV)")
-		plt.savefig(path_figs + 'Veq' + '.pdf', dpi=600)
+		plt.savefig(self.path_figs + 'Veq' + '.pdf', dpi=600)
 
     	#errors
 		if not math.isnan(Veq):
@@ -440,16 +459,17 @@ class DepolarizationBlockTest(Test):
 		plt.xticks([1], labels2)
 		plt.margins(0.2)
 		plt.ylabel("Number of AP at Ith")
-		plt.savefig(path_figs + 'num_of_APs_at_Ith' + '.pdf', dpi=600)
+		plt.savefig(self.path_figs + 'num_of_APs_at_Ith' + '.pdf', dpi=600)
 
-		path_dir = self.directory_results + model.name + '/'
+		#path_dir = self.directory_results + model.name + '/'
+		self.path_results = self.directory_results + model.name + '/'
 
-		if not os.path.exists(path_dir):
-			os.makedirs(path_dir)
+		if not os.path.exists(self.path_results):
+			os.makedirs(self.path_results)
 
-		file_name_f = path_dir + 'depol_block_features_traces.p'
-		file_name_json = path_dir + 'depol_block_model_features.json'
-		file_name_json_err = path_dir + 'depol_block_model_errors.json'
+		file_name_f = self.path_results + 'depol_block_features_traces.p'
+		file_name_json = self.path_results + 'depol_block_model_features.json'
+		file_name_json_err = self.path_results + 'depol_block_model_errors.json'
 
 		errors={}
 		errors['Ith_error']=float(Ith_error)
@@ -475,7 +495,7 @@ class DepolarizationBlockTest(Test):
 
 		pickle.dump(features, gzip.GzipFile(file_name_f, "wb"))
 
-		print "Results are saved in the directory: ", path_dir
+		print "Results are saved in the directory: ", self.path_results
 
 
 		return Ith, Veq
@@ -519,8 +539,11 @@ class DepolarizationBlockTest(Test):
 		score=ZScore2(score0)
 		return score
 
+	def bind_score(self, score, model, observation, prediction):
 
-
+		score.related_data["figures"] = [self.path_figs + 'Ith.pdf', self.path_figs + 'Veq.pdf', self.path_figs + 'number_of_APs.pdf', self.path_figs + 'num_of_APs_at_Ith.pdf', self.path_figs + 'somatic_resp_at_depol_block.pdf', self.path_figs + 'somatic_resp_at_Ith.pdf']
+		score.related_data["results"] = [self.path_results + 'depol_block_model_errors.json', self.path_results + 'depol_block_model_features.json']
+		return score
 
 class ObliqueIntegrationTest(Test):
 	"""Tests the signal integration in oblique dendrites for increasing number of synchronous and asynchronous inputs"""
@@ -552,6 +575,9 @@ class ObliqueIntegrationTest(Test):
 		self.directory_results = base_directory + 'results/'
 		self.directory_figs = base_directory + 'figs/'
 
+		self.path_figs = None	#added later, because model name is needed
+		self.path_results = None
+
 		self.npool = 4
 
 		description = "Tests the signal integration in oblique dendrites for increasing number of synchronous and asynchronous inputs"
@@ -576,8 +602,8 @@ class ObliqueIntegrationTest(Test):
 	    traces_dend = [trace_dend]
 
 	    efel.setThreshold(threshold)
-	    traces_results_dend = efel.getFeatureValues(traces_dend,['Spikecount_stimint'])
-	    traces_results = efel.getFeatureValues(traces,['Spikecount_stimint'])
+	    traces_results_dend = efel.getFeatureValues(traces_dend,['Spikecount_stimint'], raise_warnings=True)
+	    traces_results = efel.getFeatureValues(traces,['Spikecount_stimint'], raise_warnings=True)
 	    spikecount_dend=traces_results_dend[0]['Spikecount_stimint']
 	    spikecount=traces_results[0]['Spikecount_stimint']
 
@@ -744,12 +770,12 @@ class ObliqueIntegrationTest(Test):
 	    exp_mean_time_to_peak_SEM=self.observation['time_to_peak_sem']
 	    exp_mean_time_to_peak_SD=self.observation['time_to_peak_std']
 
-	    path_figs = self.directory_figs + 'oblique/' + model.name + '/'
+	    self.path_figs = self.directory_figs + 'oblique/' + model.name + '/'
 
-	    if not os.path.exists(path_figs):
-	        os.makedirs(path_figs)
+	    if not os.path.exists(self.path_figs):
+	        os.makedirs(self.path_figs)
 
-	    print "The figures are saved in the directory: ", path_figs
+	    print "The figures are saved in the directory: ", self.path_figs
 
 	    stop=len(dend_loc_num_weight)+1
 	    sep=numpy.arange(0,stop,11)
@@ -785,7 +811,7 @@ class ObliqueIntegrationTest(Test):
 
 	    fig0 = plt.gcf()
 	    fig0.set_size_inches(16, 24)
-	    plt.savefig(path_figs + 'traces_sync' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'traces_sync' + '.pdf', dpi=600,)
 
 	    fig0, axes0 = plt.subplots(nrows=2, ncols=1)
 	    fig0.tight_layout()
@@ -803,7 +829,7 @@ class ObliqueIntegrationTest(Test):
 	        plt.tick_params(labelsize=20)
 	    fig0 = plt.gcf()
 	    fig0.set_size_inches(16, 24)
-	    plt.savefig(path_figs + 'somatic_traces_sync' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'somatic_traces_sync' + '.pdf', dpi=600,)
 
 	    soma_depol=numpy.array([])
 	    soma_depols=[]
@@ -1045,7 +1071,7 @@ class ObliqueIntegrationTest(Test):
 	        plt.legend(loc=2, prop={'size':10})
 	    fig = plt.gcf()
 	    fig.set_size_inches(12, 12)
-	    plt.savefig(path_figs + 'input_output_curves_sync' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'input_output_curves_sync' + '.pdf', dpi=600,)
 
 	    plt.figure(4)
 	    plt.suptitle('Synchronous inputs')
@@ -1083,7 +1109,7 @@ class ObliqueIntegrationTest(Test):
 
 	    fig = plt.gcf()
 	    fig.set_size_inches(12, 15)
-	    plt.savefig(path_figs + 'summary_input_output_curve_sync' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'summary_input_output_curve_sync' + '.pdf', dpi=600,)
 
 	    plt.figure(5)
 
@@ -1111,7 +1137,7 @@ class ObliqueIntegrationTest(Test):
 
 	    fig = plt.gcf()
 	    fig.set_size_inches(12, 12)
-	    plt.savefig(path_figs + 'peak_derivative_plots_sync' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'peak_derivative_plots_sync' + '.pdf', dpi=600,)
 
 	    #VALUES PLOT
 	    fig, axes = plt.subplots(nrows=4, ncols=2)
@@ -1259,7 +1285,7 @@ class ObliqueIntegrationTest(Test):
 
 	    fig = plt.gcf()
 	    fig.set_size_inches(14, 14)
-	    plt.savefig(path_figs + 'values_sync' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'values_sync' + '.pdf', dpi=600,)
 
 
 
@@ -1377,7 +1403,7 @@ class ObliqueIntegrationTest(Test):
 
 	    fig = plt.gcf()
 	    fig.set_size_inches(14, 18)
-	    plt.savefig(path_figs + 'errors_sync' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'errors_sync' + '.pdf', dpi=600,)
 
 	# mean values plot
 
@@ -1468,7 +1494,7 @@ class ObliqueIntegrationTest(Test):
 
 	    fig = plt.gcf()
 	    fig.set_size_inches(22, 18)
-	    plt.savefig(path_figs + 'mean_values_sync' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'mean_values_sync' + '.pdf', dpi=600,)
 
 	    plt.figure()
 	# mean errors plot
@@ -1485,7 +1511,7 @@ class ObliqueIntegrationTest(Test):
 
 	    fig = plt.gcf()
 	    fig.set_size_inches(16, 18)
-	    plt.savefig(path_figs + 'mean_errors_sync' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'mean_errors_sync' + '.pdf', dpi=600,)
 
 	    exp_n=92
 	    n_prox=33
@@ -1509,10 +1535,10 @@ class ObliqueIntegrationTest(Test):
 	    async_nonlin_SEM=self.observation['async_nonlin_sem']
 	    async_nonlin_SD=self.observation['async_nonlin_std']
 
-	    path_figs = self.directory_figs + 'oblique/' + model.name + '/'
+	    #path_figs = self.directory_figs + 'oblique/' + model.name + '/'
 
-	    if not os.path.exists(path_figs):
-	        os.makedirs(path_figs)
+	    if not os.path.exists(self.path_figs):
+	        os.makedirs(self.path_figs)
 
 	    stop=len(dend_loc_num_weight)+1
 	    sep=numpy.arange(0,stop,11)
@@ -1548,7 +1574,7 @@ class ObliqueIntegrationTest(Test):
 	        plt.tick_params(labelsize=20)
 	    fig = plt.gcf()
 	    fig.set_size_inches(16, 24)
-	    plt.savefig(path_figs + 'traces_async' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'traces_async' + '.pdf', dpi=600,)
 
 	    fig0, axes0 = plt.subplots(nrows=2, ncols=1)
 	    fig0.tight_layout()
@@ -1566,7 +1592,7 @@ class ObliqueIntegrationTest(Test):
 	        plt.tick_params(labelsize=20)
 	    fig = plt.gcf()
 	    fig.set_size_inches(16, 24)
-	    plt.savefig(path_figs + 'somatic_traces_async' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'somatic_traces_async' + '.pdf', dpi=600,)
 
 	    soma_depol=numpy.array([])
 	    soma_depols=[]
@@ -1684,7 +1710,7 @@ class ObliqueIntegrationTest(Test):
 
 	    fig = plt.gcf()
 	    fig.set_size_inches(12, 12)
-	    plt.savefig(path_figs + 'input_output_curves_async' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'input_output_curves_async' + '.pdf', dpi=600,)
 
 
 	    plt.figure()
@@ -1713,7 +1739,7 @@ class ObliqueIntegrationTest(Test):
 
 	    fig = plt.gcf()
 	    fig.set_size_inches(12, 12)
-	    plt.savefig(path_figs + 'peak_derivative_plots_async' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'peak_derivative_plots_async' + '.pdf', dpi=600,)
 
 
 	    fig0, axes0 = plt.subplots(nrows=2, ncols=2)
@@ -1741,7 +1767,7 @@ class ObliqueIntegrationTest(Test):
 
 	    fig = plt.gcf()
 	    fig.set_size_inches(20, 20)
-	    plt.savefig(path_figs + 'nonlin_values_async' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'nonlin_values_async' + '.pdf', dpi=600,)
 
 	    async_nonlin_errors=[]
 	    asynch_nonlin_error_at_th=numpy.array([])
@@ -1771,7 +1797,7 @@ class ObliqueIntegrationTest(Test):
 	        plt.title('dendrite '+str(dend_loc000[j][0])+ ' location: ' +str(dend_loc000[j][1]))
 	    fig = plt.gcf()
 	    fig.set_size_inches(18, 20)
-	    plt.savefig(path_figs + 'nonlin_errors_async' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'nonlin_errors_async' + '.pdf', dpi=600,)
 
 	    return mean_nonlin_at_th, SD_nonlin_at_th
 
@@ -1809,8 +1835,8 @@ class ObliqueIntegrationTest(Test):
 		model_name_oblique = model.name
 
 
-		pool0 = multiprocessing.pool.ThreadPool(self.npool)    # multiprocessing.pool.ThreadPool is used because a nested multiprocessing is used in the function called here (to keep every NEURON related task in independent processes)
-		#pool0 = multiprocessing.Pool(self.npool, maxtasksperchild = 1)
+		#pool0 = multiprocessing.pool.ThreadPool(self.npool)    # multiprocessing.pool.ThreadPool is used because a nested multiprocessing is used in the function called here (to keep every NEURON related task in independent processes)
+		pool0 = NoDeamonPool(self.npool, maxtasksperchild = 1)
 
 		print "Adjusting synaptic weights on all the locations ..."
 
@@ -1828,28 +1854,32 @@ class ObliqueIntegrationTest(Test):
 		num = numpy.arange(0,max_num_syn+1)
 		dend_loc_num_weight=[]
 
-		dend0=[]
-		dend_loc00=[]
+		#dend0=[]
+		#dend_loc00=[]
+		indices_to_delete = []
+		dend_loc000=list(model.dend_loc) #dend_loc000 will not contain the dendrites in which spike causes somatic AP or generates no spike or generates spike even for very small stimulus
+
+		results00=list(results0)	#results00 will not contain the synaptic weights for dendrites in which spike causes somatic AP or generates no spike or generates spike even for very small stimulus
+
 		for i in range(0, len(model.dend_loc)):
-		    if results0[i][0]==None or results0[i][0]=='no spike' or results0[i][0]=='always spike':
-		        #print results0[i][0]
-		        if model.dend_loc[i][0] not in dend0:
-		            dend0.append(model.dend_loc[i][0])
-		    if results0[i][0]==None :
-		        print 'The dendritic spike on at least one of the locations of dendrite ',  model.dend_loc[i][0], 'generated somatic AP'
-		    if results0[i][0]=='no spike' :
-		        print 'No dendritic spike could be generated on at least one of the locations of dendrite',  model.dend_loc[i][0]
-		    if results0[i][0]=='always spike' :
-		        print 'At least one of the locations of dendrite',  model.dend_loc[i][0], 'generates dendritic spike even to smaller number of inputs'
-		for k in range(0, len(dend0)):
-		    for i in range(0, len(model.dend_loc)):
-		        if model.dend_loc[i][0]==dend0[k]:
-		            dend_loc00.append(model.dend_loc[i])
 
-		dend_loc000=list(model.dend_loc)
+			if results0[i][0]==None:
 
-		for i in range(0, len(dend_loc00)):
-			dend_loc000.remove(dend_loc00[i])       #dend_loc000 does not contain the dendrites in which spike causes somatic AP
+				print 'The dendritic spike on at least one of the locations of dendrite ', model.dend_loc[i][0], 'generated somatic AP'
+				indices_to_delete.append(i)
+
+			elif results0[i][0]=='no spike':
+				print 'No dendritic spike could be generated on at least one of the locations of dendrite',  model.dend_loc[i][0]
+				indices_to_delete.append(i)
+
+			elif results0[i][0]=='always spike':
+				print 'At least one of the locations of dendrite',  model.dend_loc[i][0], 'generates dendritic spike even to smaller number of inputs'
+				indices_to_delete.append(i)
+
+		for k in sorted(indices_to_delete, reverse=True):  #deleted in reverse order so that subsequent indices remains ok
+
+			del dend_loc000[k]
+			del results00[k]
 
 		if len(dend_loc000) > 0:		# if none of the dendrites was able to generate dendritic spike the list is empty
 			for i in range(0, len(dend_loc000)):
@@ -1858,7 +1888,7 @@ class ObliqueIntegrationTest(Test):
 
 			        e=list(dend_loc000[i])
 			        e.append(num[j])
-			        e.append(results0[i][1])
+			        e.append(results00[i][1])
 			        dend_loc_num_weight.append(e)		#calculates, and adds the synaptic weights needed to a list
 
 			interval_sync=0.1
@@ -1920,24 +1950,24 @@ class ObliqueIntegrationTest(Test):
 		for key, value in prediction_json .iteritems():
 			prediction_json[key] = str(value)
 
-		path_results = self.directory_results + model_name_oblique + '/'
-		if not os.path.exists(path_results):
-			os.makedirs(path_results)
-		file_name_json = path_results + 'oblique_model_features.json'
+		self.path_results = self.directory_results + model_name_oblique + '/'
+		if not os.path.exists(self.path_results):
+			os.makedirs(self.path_results)
+		file_name_json = self.path_results + 'oblique_model_features.json'
 
 		json.dump(prediction_json, open(file_name_json, "wb"), indent=4)
 
-		print "Results are saved in the directory: ", path_results
+		print "Results are saved in the directory: ", self.path_results
 
 		return prediction
 
 	def compute_score(self, observation, prediction, verbose=False):
 		"""Implementation of sciunit.Test.score_prediction."""
 
-		path_results = self.directory_results + model_name_oblique + '/'
-		if not os.path.exists(path_results):
-			os.makedirs(path_results)
-		file_name = path_results + 'oblique_features.p'
+		#path_results = self.directory_results + model_name_oblique + '/'
+		if not os.path.exists(self.path_results):
+			os.makedirs(self.path_results)
+		file_name = self.path_results + 'oblique_features.p'
 
 		results=[]
 		results.append(observation)
@@ -1948,10 +1978,10 @@ class ObliqueIntegrationTest(Test):
 
 		score=P_Value(score0)
 
-		path_figs = self.directory_figs + 'oblique/' + model_name_oblique + '/'
+		#path_figs = self.directory_figs + 'oblique/' + model_name_oblique + '/'
 
-		if not os.path.exists(path_figs):
-		    os.makedirs(path_figs)
+		if not os.path.exists(self.path_figs):
+		    os.makedirs(self.path_figs)
 
 		plt.figure()
 		x =numpy.arange(1,10)
@@ -1965,10 +1995,22 @@ class ObliqueIntegrationTest(Test):
 		plt.ylabel("p values")
 		fig = plt.gcf()
 		fig.set_size_inches(12, 10)
-		plt.savefig(path_figs + 'p_values' + '.pdf', dpi=600,)
+		plt.savefig(self.path_figs + 'p_values' + '.pdf', dpi=600,)
 
 		return score
 
+	def bind_score(self, score, model, observation, prediction):
+
+		score.related_data["figures"] = [self.path_figs + 'errors_sync.pdf', self.path_figs + 'input_output_curves_async.pdf',
+										self.path_figs + 'input_output_curves_sync.pdf', self.path_figs + 'mean_errors_sync.pdf',
+										self.path_figs + 'mean_values_sync.pdf', self.path_figs + 'nonlin_errors_async.pdf',
+										self.path_figs + 'nonlin_values_async.pdf', self.path_figs + 'peak_derivative_plots_async.pdf',
+										self.path_figs + 'peak_derivative_plots_sync.pdf', self.path_figs + 'p_values.pdf',
+										self.path_figs + 'somatic_traces_async.pdf', self.path_figs + 'somatic_traces_sync.pdf',
+										self.path_figs + 'summary_input_output_curve_sync.pdf', self.path_figs + 'traces_async.pdf',
+										self.path_figs + 'traces_sync.pdf']
+		score.related_data["results"] = [self.path_results + 'oblique_model_features.json']
+		return score
 
 class SomaticFeaturesTest(Test):
 	"""Tests some somatic features under current injection of increasing amplitudes."""
@@ -1989,6 +2031,10 @@ class SomaticFeaturesTest(Test):
 		self.directory = base_directory + 'temp_data/'
 		self.directory_figs = base_directory + 'figs/'
 		self.directory_results = base_directory + 'results/'
+
+		self.path_temp_data = None #added later, because model name is needed
+		self.path_figs = None
+		self.path_results = None
 		self.npool = 4
 
 		#with open('./stimfeat/PC_newfeat_No14112401_15012303-m990803_stimfeat.json') as f:
@@ -2047,14 +2093,14 @@ class SomaticFeaturesTest(Test):
 
 		traces_result={}
 
-		path = self.directory + model.name + '/soma/'
+		self.path_temp_data = self.directory + model.name + '/soma/'
 
-		if not os.path.exists(path):
-		    os.makedirs(path)
+		if not os.path.exists(self.path_temp_data):
+		    os.makedirs(self.path_temp_data)
 
 
 		if stim_type == "SquarePulse":
-		    file_name = path + stimulus_name + '.p'
+		    file_name = self.path_temp_data + stimulus_name + '.p'
 
 		    if self.force_run or (os.path.isfile(file_name) is False):
 
@@ -2114,12 +2160,12 @@ class SomaticFeaturesTest(Test):
 
 	def create_figs(self, model, traces_results, features_names, feature_results_dict, observation):
 
-	    path_figs = self.directory_figs + 'soma/' + model.name + '/'
+	    self.path_figs = self.directory_figs + 'soma/' + model.name + '/'
 
-	    if not os.path.exists(path_figs):
-	        os.makedirs(path_figs)
+	    if not os.path.exists(self.path_figs):
+	        os.makedirs(self.path_figs)
 
-	    print "The figures are saved in the directory: ", path_figs
+	    print "The figures are saved in the directory: ", self.path_figs
 
 	    plt.figure(1)
 	    #key=sorted()
@@ -2127,7 +2173,7 @@ class SomaticFeaturesTest(Test):
 	        for key, value in traces_results[i].iteritems():
 	            plt.plot(traces_results[i][key][0], traces_results[i][key][1], label=key)
 	    plt.legend(loc=2)
-	    plt.savefig(path_figs + 'traces' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'traces' + '.pdf', dpi=600,)
 
 
 	    fig, axes = plt.subplots(nrows=4, ncols=2)
@@ -2149,7 +2195,7 @@ class SomaticFeaturesTest(Test):
 
 	    fig = plt.gcf()
 	    fig.set_size_inches(12, 10)
-	    plt.savefig(path_figs + 'traces_subplots' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'traces_subplots' + '.pdf', dpi=600,)
 
 	    axs = plottools.tiled_figure("absolute features", figs={}, frames=1, columns=1, orientation='page',
 	                            height_ratios=[0.9,0.1], top=0.97, bottom=0.05, left=0.25, right=0.97, hspace=0.1, wspace=0.2)
@@ -2163,7 +2209,7 @@ class SomaticFeaturesTest(Test):
 	    axs[0].set_yticklabels(features_names)
 	    axs[0].set_ylim(-1, len(features_names))
 	    axs[0].set_title('Absolute Features')
-	    plt.savefig(path_figs + 'absolute_features' + '.pdf', dpi=600,)
+	    plt.savefig(self.path_figs + 'absolute_features' + '.pdf', dpi=600,)
 
 
 	def generate_prediction(self, model, verbose=False):
@@ -2201,12 +2247,12 @@ class SomaticFeaturesTest(Test):
 		for i in range (0,len(feature_results)):
 		    feature_results_dict.update(feature_results[i])  #concatenate dictionaries
 
-		path = self.directory_results + model_name_soma + '/'
+		self.path_results = self.directory_results + model_name_soma + '/'
 
-		if not os.path.exists(path):
-		    os.makedirs(path)
+		if not os.path.exists(self.path_results):
+		    os.makedirs(self.path_results)
 
-		file_name=path+'soma_features.p'
+		file_name=self.path_results+'soma_features.p'
 
 		SomaFeaturesDict={}
 		SomaFeaturesDict['traces_results']=traces_results
@@ -2225,7 +2271,7 @@ class SomaticFeaturesTest(Test):
 			feature_name = SomaFeaturesDict['features_names'][i]
 			soma_features[feature_name] = { key:value for key,value in feature_results_dict[feature_name].items() if key in needed_keys }
 
-		file_name_json = path + 'somatic_model_features.json'
+		file_name_json = self.path_results + 'somatic_model_features.json'
 		json.dump(soma_features, open(file_name_json, "wb"), indent=4)
 
 		prediction=soma_features
@@ -2235,19 +2281,19 @@ class SomaticFeaturesTest(Test):
 	def compute_score(self, observation, prediction, verbose=False):
 		"""Implementation of sciunit.Test.score_prediction."""
 
-		path_figs = self.directory_figs + 'soma/' + model_name_soma + '/'
+		#path_figs = self.directory_figs + 'soma/' + model_name_soma + '/'
 
-		if not os.path.exists(path_figs):
-		    os.makedirs(path_figs)
+		if not os.path.exists(self.path_figs):
+		    os.makedirs(self.path_figs)
 
 		score_sum, feature_results_dict, features_names  = zscore3(observation,prediction)
 
-		path = self.directory_results + model_name_soma + '/'
+		self.path_results = self.directory_results + model_name_soma + '/'
 
-		if not os.path.exists(path):
-		    os.makedirs(path)
+		if not os.path.exists(self.path_results):
+		    os.makedirs(self.path_results)
 
-		file_name=path+'soma_errors.p'
+		file_name=self.path_results+'soma_errors.p'
 
 		SomaErrorsDict={}
 		SomaErrorsDict['features_names']=features_names
@@ -2255,10 +2301,10 @@ class SomaticFeaturesTest(Test):
 
 		pickle.dump(SomaErrorsDict, gzip.GzipFile(file_name, "wb"))
 
-		file_name_json = path + 'somatic_model_errors.json'
+		file_name_json = self.path_results + 'somatic_model_errors.json'
 		json.dump(SomaErrorsDict['feature_results_dict'], open(file_name_json, "wb"), indent=4)
 
-		print "Results are saved in the directory: ", path
+		print "Results are saved in the directory: ", self.path_results
 
 		axs2 = plottools.tiled_figure("features", figs={}, frames=1, columns=1, orientation='page',
 		                              height_ratios=[0.9,0.1], top=0.97, bottom=0.05, left=0.25, right=0.97, hspace=0.1, wspace=0.2)
@@ -2271,9 +2317,18 @@ class SomaticFeaturesTest(Test):
 		axs2[0].set_yticklabels(features_names)
 		axs2[0].set_ylim(-1, len(features_names))
 		axs2[0].set_title('Feature errors')
-		plt.savefig(path_figs + 'Feature_errors' + '.pdf', dpi=600,)
+		plt.savefig(self.path_figs + 'Feature_errors' + '.pdf', dpi=600,)
 
 		score=ZScore3(score_sum)
+		return score
+
+	def bind_score(self, score, model, observation, prediction):
+
+		#path_figs = self.directory_figs + 'soma/' + model_name_soma + '/'
+		#path = self.directory_results + model_name_soma + '/'
+
+		score.related_data["figures"] = [self.path_figs + 'traces.pdf', self.path_figs + 'absolute_features.pdf', self.path_figs + 'Feature_errors.pdf', self.path_figs + 'traces_subplots.pdf']
+		score.related_data["results"] = [self.path_results + 'somatic_model_features.json', self.path_results + 'somatic_model_errors.json']
 		return score
 
 copyreg.pickle(MethodType, _pickle_method, _unpickle_method)

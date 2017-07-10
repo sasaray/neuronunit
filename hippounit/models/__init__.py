@@ -283,7 +283,7 @@ class Model(sciunit.Model,
         rec_v_dend = h.Vector()
         rec_v_dend.record(self.dendrite(self.xloc)._ref_v)
 
- 
+
         h.stdinit()
 
         dt = 0.025
@@ -303,7 +303,7 @@ class Model(sciunit.Model,
 
         return t, v, v_dend
 
-    
+
 class KaliFreund(sciunit.Model,
                  ReceivesCurrent,
                  ProducesMembranePotential):
