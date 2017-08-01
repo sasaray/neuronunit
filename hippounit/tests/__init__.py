@@ -33,7 +33,11 @@ except:
     import pickle
 import gzip
 
-import copyreg
+try:
+    import copy_reg
+except:
+    import copyreg
+
 from types import MethodType
 
 from quantities import mV, nA, ms, V, s
@@ -270,8 +274,13 @@ class DepolarizationBlockTest(Test):
 		#path = self.directory + model.name + '/depol_block/'
 		self.path_temp_data = self.directory + model.name + '/depol_block/'
 
-		if not os.path.exists(self.path_temp_data):
-			os.makedirs(self.path_temp_data)
+		try:
+			if not os.path.exists(self.path_temp_data):
+				os.makedirs(self.path_temp_data)
+		except OSError, e:
+			if e.errno != 17:
+				raise
+			pass
 
 		file_name = self.path_temp_data + 'cclamp_' + str(amp) + '.p'
 
@@ -312,8 +321,13 @@ class DepolarizationBlockTest(Test):
 		#path_figs = self.directory_figs + 'depol_block/' + model.name + '/'
 		self.path_figs = self.directory_figs + 'depol_block/' + model.name + '/'
 
-		if not os.path.exists(self.path_figs):
-			os.makedirs(self.path_figs)
+		try:
+			if not os.path.exists(self.path_figs):
+				os.makedirs(self.path_figs)
+		except OSError, e:
+			if e.errno != 17:
+				raise
+			pass
 
 		print "The figures are saved in the directory: ", self.path_figs
 
@@ -464,8 +478,13 @@ class DepolarizationBlockTest(Test):
 		#path_dir = self.directory_results + model.name + '/'
 		self.path_results = self.directory_results + model.name + '/'
 
-		if not os.path.exists(self.path_results):
-			os.makedirs(self.path_results)
+		try:
+			if not os.path.exists(self.path_results):
+				os.makedirs(self.path_results)
+		except OSError, e:
+			if e.errno != 17:
+				raise
+			pass
 
 		file_name_f = self.path_results + 'depol_block_features_traces.p'
 		file_name_json = self.path_results + 'depol_block_model_features.json'
@@ -526,6 +545,7 @@ class DepolarizationBlockTest(Test):
 		pool.join()
 		del pool
 
+		plt.close('all') #needed to avoid overlapping of saved images when the test is run on multiple models in a for loop
 
 		Ith, Veq = self.find_Ith_Veq(model, results, amps)
 
@@ -537,6 +557,10 @@ class DepolarizationBlockTest(Test):
 		"""Implementation of sciunit.Test.score_prediction."""
 		score0 = zscore2(observation,prediction)
 		score=ZScore2(score0)
+
+		if self.show_plot:
+			plt.show()
+			
 		return score
 
 	def bind_score(self, score, model, observation, prediction):
@@ -570,6 +594,7 @@ class ObliqueIntegrationTest(Test):
 
 		self.force_run_synapse = force_run_synapse
 		self.force_run_bin_search = force_run_bin_search
+		self.show_plot = show_plot
 
 		self.directory = base_directory + 'temp_data/'
 		self.directory_results = base_directory + 'results/'
@@ -619,8 +644,13 @@ class ObliqueIntegrationTest(Test):
 
 	    path = self.directory + model.name + '/synapse/'
 
-	    if not os.path.exists(path):
-	        os.makedirs(path)
+	    try:
+	        if not os.path.exists(path):
+	            os.makedirs(path)
+	    except OSError, e:
+	        if e.errno != 17:
+	            raise
+	        pass
 
 	    if interval>0.1:
 	        file_name = path + 'synapse_async_' + str(num)+ '_' + str(ndend)+ '_' + str(xloc) + '.p'
@@ -656,8 +686,13 @@ class ObliqueIntegrationTest(Test):
 
 	    path_bin_search = self.directory + model.name + '/bin_search/'
 
-	    if not os.path.exists(path_bin_search):
-	        os.makedirs(path_bin_search)
+	    try:
+	        if not os.path.exists(path_bin_search):
+	            os.makedirs(path_bin_search)
+	    except OSError, e:
+	        if e.errno != 17:
+	            raise
+	        pass
 
 	    interval=0.1
 
@@ -772,8 +807,13 @@ class ObliqueIntegrationTest(Test):
 
 	    self.path_figs = self.directory_figs + 'oblique/' + model.name + '/'
 
-	    if not os.path.exists(self.path_figs):
-	        os.makedirs(self.path_figs)
+	    try:
+	        if not os.path.exists(self.path_figs):
+	            os.makedirs(self.path_figs)
+	    except OSError, e:
+	        if e.errno != 17:
+	            raise
+	        pass
 
 	    print "The figures are saved in the directory: ", self.path_figs
 
@@ -1537,8 +1577,13 @@ class ObliqueIntegrationTest(Test):
 
 	    #path_figs = self.directory_figs + 'oblique/' + model.name + '/'
 
-	    if not os.path.exists(self.path_figs):
-	        os.makedirs(self.path_figs)
+	    try:
+	        if not os.path.exists(self.path_figs):
+	            os.makedirs(self.path_figs)
+	    except OSError, e:
+	        if e.errno != 17:
+	            raise
+	        pass
 
 	    stop=len(dend_loc_num_weight)+1
 	    sep=numpy.arange(0,stop,11)
@@ -1916,6 +1961,8 @@ class ObliqueIntegrationTest(Test):
 			pool1.join()
 			del pool1
 
+			plt.close('all') #needed to avoid overlapping of saved images when the test is run on multiple models in a for loop
+
 			model_means, model_SDs, model_N = self.calcs_plots(model, results, dend_loc000, dend_loc_num_weight)
 
 			mean_nonlin_at_th_asynch, SD_nonlin_at_th_asynch = self.calcs_plots_async(model, results_async, dend_loc000, dend_loc_num_weight)
@@ -1951,8 +1998,15 @@ class ObliqueIntegrationTest(Test):
 			prediction_json[key] = str(value)
 
 		self.path_results = self.directory_results + model_name_oblique + '/'
-		if not os.path.exists(self.path_results):
-			os.makedirs(self.path_results)
+
+		try:
+			if not os.path.exists(self.path_results):
+				os.makedirs(self.path_results)
+		except OSError, e:
+			if e.errno != 17:
+				raise
+			pass
+
 		file_name_json = self.path_results + 'oblique_model_features.json'
 
 		json.dump(prediction_json, open(file_name_json, "wb"), indent=4)
@@ -1965,8 +2019,15 @@ class ObliqueIntegrationTest(Test):
 		"""Implementation of sciunit.Test.score_prediction."""
 
 		#path_results = self.directory_results + model_name_oblique + '/'
-		if not os.path.exists(self.path_results):
-			os.makedirs(self.path_results)
+
+		try:
+			if not os.path.exists(self.path_results):
+				os.makedirs(self.path_results)
+		except OSError, e:
+			if e.errno != 17:
+				raise
+			pass
+
 		file_name = self.path_results + 'oblique_features.p'
 
 		results=[]
@@ -1980,8 +2041,13 @@ class ObliqueIntegrationTest(Test):
 
 		#path_figs = self.directory_figs + 'oblique/' + model_name_oblique + '/'
 
-		if not os.path.exists(self.path_figs):
-		    os.makedirs(self.path_figs)
+		try:
+			if not os.path.exists(self.path_figs):
+				os.makedirs(self.path_figs)
+		except OSError, e:
+			if e.errno != 17:
+				raise
+			pass
 
 		plt.figure()
 		x =numpy.arange(1,10)
@@ -1996,6 +2062,9 @@ class ObliqueIntegrationTest(Test):
 		fig = plt.gcf()
 		fig.set_size_inches(12, 10)
 		plt.savefig(self.path_figs + 'p_values' + '.pdf', dpi=600,)
+
+		if self.show_plot:
+			plt.show()
 
 		return score
 
@@ -2027,6 +2096,7 @@ class SomaticFeaturesTest(Test):
 		self.required_capabilities += (cap.ReceivesSquareCurrent,)
 
 		self.force_run = force_run
+		self.show_plot = show_plot
 
 		self.directory = base_directory + 'temp_data/'
 		self.directory_figs = base_directory + 'figs/'
@@ -2037,6 +2107,7 @@ class SomaticFeaturesTest(Test):
 		self.path_results = None
 		self.npool = 4
 
+		plt.close('all') #needed to avoid overlapping of saved images when the test is run on multiple models in a for loop
 		#with open('./stimfeat/PC_newfeat_No14112401_15012303-m990803_stimfeat.json') as f:
 		    #self.config = json.load(f, object_pairs_hook=collections.OrderedDict)
 
@@ -2095,8 +2166,14 @@ class SomaticFeaturesTest(Test):
 
 		self.path_temp_data = self.directory + model.name + '/soma/'
 
-		if not os.path.exists(self.path_temp_data):
-		    os.makedirs(self.path_temp_data)
+		try:
+
+			if not os.path.exists(self.path_temp_data):
+				os.makedirs(self.path_temp_data)
+		except OSError, e:
+			if e.errno != 17:
+				raise
+			pass
 
 
 		if stim_type == "SquarePulse":
@@ -2162,8 +2239,13 @@ class SomaticFeaturesTest(Test):
 
 	    self.path_figs = self.directory_figs + 'soma/' + model.name + '/'
 
-	    if not os.path.exists(self.path_figs):
-	        os.makedirs(self.path_figs)
+	    try:
+	        if not os.path.exists(self.path_figs):
+	            os.makedirs(self.path_figs)
+	    except OSError, e:
+	        if e.errno != 17:
+	            raise
+	        pass
 
 	    print "The figures are saved in the directory: ", self.path_figs
 
@@ -2249,8 +2331,13 @@ class SomaticFeaturesTest(Test):
 
 		self.path_results = self.directory_results + model_name_soma + '/'
 
-		if not os.path.exists(self.path_results):
-		    os.makedirs(self.path_results)
+		try:
+			if not os.path.exists(self.path_results):
+				os.makedirs(self.path_results)
+		except OSError, e:
+			if e.errno != 17:
+				raise
+			pass
 
 		file_name=self.path_results+'soma_features.p'
 
@@ -2260,6 +2347,8 @@ class SomaticFeaturesTest(Test):
 		SomaFeaturesDict['feature_results_dict']=feature_results_dict
 		SomaFeaturesDict['observation']=self.observation
 		pickle.dump(SomaFeaturesDict, gzip.GzipFile(file_name, "wb"))
+
+		plt.close('all') #needed to avoid overlapping of saved images when the test is run on multiple models in a for loop
 
 		self.create_figs(model, traces_results, features_names, feature_results_dict, self.observation)
 
@@ -2283,15 +2372,25 @@ class SomaticFeaturesTest(Test):
 
 		#path_figs = self.directory_figs + 'soma/' + model_name_soma + '/'
 
-		if not os.path.exists(self.path_figs):
-		    os.makedirs(self.path_figs)
+		try:
+			if not os.path.exists(self.path_figs):
+				os.makedirs(self.path_figs)
+		except OSError, e:
+			if e.errno != 17:
+				raise
+			pass
 
 		score_sum, feature_results_dict, features_names  = zscore3(observation,prediction)
 
 		self.path_results = self.directory_results + model_name_soma + '/'
 
-		if not os.path.exists(self.path_results):
-		    os.makedirs(self.path_results)
+		try:
+			if not os.path.exists(self.path_results):
+				os.makedirs(self.path_results)
+		except OSError, e:
+			if e.errno != 17:
+				raise
+			pass
 
 		file_name=self.path_results+'soma_errors.p'
 
@@ -2319,6 +2418,9 @@ class SomaticFeaturesTest(Test):
 		axs2[0].set_title('Feature errors')
 		plt.savefig(self.path_figs + 'Feature_errors' + '.pdf', dpi=600,)
 
+		if self.show_plot:
+			plt.show()
+
 		score=ZScore3(score_sum)
 		return score
 
@@ -2331,4 +2433,7 @@ class SomaticFeaturesTest(Test):
 		score.related_data["results"] = [self.path_results + 'somatic_model_features.json', self.path_results + 'somatic_model_errors.json']
 		return score
 
-copyreg.pickle(MethodType, _pickle_method, _unpickle_method)
+try:
+	copyreg.pickle(MethodType, _pickle_method, _unpickle_method)
+except:
+	copy_reg.pickle(MethodType, _pickle_method, _unpickle_method)
