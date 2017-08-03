@@ -10,7 +10,7 @@ import multiprocessing
 
 class Model(sciunit.Model,
                  cap.ProvidesGoodObliques,
-                 cap.ReceivesSquareCurrent,
+                 cap.ReceivesSquareCurrent_ProvidesResponse,
                  cap.ReceivesSynapse):
 
     def __init__(self, name="model"):
