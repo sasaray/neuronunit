@@ -242,15 +242,14 @@ class SomaticFeaturesTest(Test):
 	    plt.legend(loc=2)
 	    plt.savefig(self.path_figs + 'traces' + '.pdf', dpi=600,)
 
-
-	    fig, axes = plt.subplots(nrows=4, ncols=2)
+	    fig, axes = plt.subplots(nrows=int(round(len(traces_results)/2.0)), ncols=2)
 	    fig.tight_layout()
 	    for i in range (0, len(traces_results)):
 
 	        for key, value in traces_results[i].iteritems():
 
 
-	            plt.subplot(4,2,i+1)
+	            plt.subplot(round(len(traces_results)/2.0),2,i+1)
 	            plt.plot(traces_results[i][key][0], traces_results[i][key][1])
 	            plt.title(key, fontsize=15)
 	            plt.xlabel("ms", fontsize=15)
