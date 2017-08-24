@@ -400,13 +400,6 @@
             "Stimulus": "Step0.8",
             "Type": "inv_second_ISI"
         },
-        "inv_third_ISI.Step0.2": {
-            "Std": "0.0",
-            "Weight": "1",
-            "Mean": "0.0",
-            "Stimulus": "Step0.2",
-            "Type": "inv_third_ISI"
-        },
         "inv_third_ISI.Step0.4": {
             "Std": "21.876012860164895",
             "Weight": "1",
@@ -428,13 +421,6 @@
             "Stimulus": "Step0.8",
             "Type": "inv_third_ISI"
         },
-        "inv_fourth_ISI.Step0.2": {
-            "Std": "0.0",
-            "Weight": "1",
-            "Mean": "0.0",
-            "Stimulus": "Step0.2",
-            "Type": "inv_fourth_ISI"
-        },
         "inv_fourth_ISI.Step0.4": {
             "Std": "16.109844803048116",
             "Weight": "1",
@@ -455,13 +441,6 @@
             "Mean": "100.67639053637515",
             "Stimulus": "Step0.8",
             "Type": "inv_fourth_ISI"
-        },
-        "inv_fifth_ISI.Step0.2": {
-            "Std": "0.0",
-            "Weight": "1",
-            "Mean": "0.0",
-            "Stimulus": "Step0.2",
-            "Type": "inv_fifth_ISI"
         },
         "inv_fifth_ISI.Step0.4": {
             "Std": "16.126200420426056",
