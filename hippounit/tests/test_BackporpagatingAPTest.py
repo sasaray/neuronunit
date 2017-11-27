@@ -139,8 +139,8 @@ class BackpropagatingAPTest(Test):
 
         return spikecount
 
-    def binsearch(self, model, range, delay, dur, section_stim, loc_stim, section_rec, loc_rec):
-        c_minmax = range
+    def binsearch(self, model, stim_range, delay, dur, section_stim, loc_stim, section_rec, loc_rec):
+        c_minmax = stim_range
         c_step_start = 0.01
         c_step_stop= 0.002
 
@@ -187,7 +187,8 @@ class BackpropagatingAPTest(Test):
             c_step_start=c_step_start/2
 
         if not found:
-            amp_index = min(range(len(_spikecounts)), key=lambda i: abs(_spikecounts[i]-15.0)) # we choose the one that is nearest to 15
+            amp_index = min(range(len(spikecounts)), key=lambda i: abs(spikecounts[i]-15.0)) # we choose the one that is nearest to 15
+            print amp_index
             amplitude = amplitudes[amp_index]
 
 
@@ -265,15 +266,15 @@ class BackpropagatingAPTest(Test):
             for i in range(len(spikecounts)):
 
                 if i != len(spikecounts)-1:
-                    if spikecounts[i] >= 10 and spikecounts[i] <= 20 and (spikecounts[i-1] < spikecounts[i] and spikecounts[i+1] > spikecounts[i]):
+                    if spikecounts[i] >= 10 and spikecounts[i] <= 20 and (spikecounts[i-1] <= spikecounts[i] and spikecounts[i+1] >= spikecounts[i]):
                         amplitudes.append(amps[i])
                         _spikecounts.append(spikecounts[i])
-                    elif spikecounts[i] < 10 and spikecounts[i+1] > 20 and (spikecounts[i-1] < spikecounts[i] and spikecounts[i+1] > spikecounts[i]):
+                    elif spikecounts[i] < 10 and spikecounts[i+1] > 20 and (spikecounts[i-1] <= spikecounts[i] and spikecounts[i+1] >= spikecounts[i]):
                         binsearch_result = self.binsearch(model, [amps[i], amps[i+1]], delay, dur, section_stim, loc_stim, section_rec, loc_rec)
                         amplitude = binsearch_result[1]
                         spikecount = binsearch_result[2]
                 else: # there is no spikecounts[i+1] in this case
-                    if spikecounts[i] >= 10 and spikecounts[i] <= 20 and spikecounts[i-1] < spikecounts[i]:
+                    if spikecounts[i] >= 10 and spikecounts[i] <= 20 and spikecounts[i-1] <= spikecounts[i]:
                         amplitudes.append(amps[i])
                         _spikecounts.append(spikecounts[i])
         if len(amplitudes) > 1:
@@ -729,6 +730,10 @@ class BackpropagatingAPTest(Test):
         #score_sum_StrongProp, score_sum_WeakProp  = scores.ZScore_backpropagatingAP.compute(observation,prediction, [50, 150, 250])
         score_sums, errors= scores.ZScore_backpropagatingAP.compute(observation,prediction, distances)
 
+        scores_dict = {}
+        scores_dict['Z_score_strong_propagating'] = score_sums[0]
+        scores_dict['Z_score_weak_propagating'] = score_sums[1]
+
         self.path_results = self.directory_results + model_name_bAP + '/'
 
         try:
@@ -742,6 +747,10 @@ class BackpropagatingAPTest(Test):
         file_name=self.path_results+'bAP_errors.json'
 
         json.dump(errors, open(file_name, "wb"), indent=4)
+
+        file_name_s=self.path_results+'bAP_scores.json'
+
+        json.dump(scores_dict, open(file_name_s, "wb"), indent=4)
 
         self.plot_results(observation, prediction, errors, model_name_bAP)
 
